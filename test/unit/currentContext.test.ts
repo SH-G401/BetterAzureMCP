@@ -142,7 +142,7 @@ describe('ContextStore', () => {
         'win32',
         'C:\\Users\\me',
       ),
-    ).toContain('betterazuremcp');
+    ).toBe('C:\\Users\\me\\AppData\\Roaming\\betterazuremcp\\context.json');
     expect(defaultStateFile(undefined, {}, 'darwin', '/Users/me')).toBe(
       '/Users/me/Library/Application Support/betterazuremcp/context.json',
     );

@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, posix, win32 } from 'node:path';
 import type { Logger } from '../logger.js';
 
 /** The subscription and directory (Entra tenant) the user worked in most recently. */
@@ -127,11 +127,14 @@ export function defaultStateFile(
   home: string = homedir(),
 ): string {
   if (stateDir !== undefined) return join(stateDir, FILE_NAME);
+  // Use the target platform's path rules, not the host's.
   if (platform === 'win32') {
-    return join(env.APPDATA ?? join(home, 'AppData', 'Roaming'), 'betterazuremcp', FILE_NAME);
+    const base = env.APPDATA ?? win32.join(home, 'AppData', 'Roaming');
+    return win32.join(base, 'betterazuremcp', FILE_NAME);
   }
   if (platform === 'darwin') {
-    return join(home, 'Library', 'Application Support', 'betterazuremcp', FILE_NAME);
+    return posix.join(home, 'Library', 'Application Support', 'betterazuremcp', FILE_NAME);
   }
-  return join(env.XDG_STATE_HOME ?? join(home, '.local', 'state'), 'betterazuremcp', FILE_NAME);
+  const base = env.XDG_STATE_HOME ?? posix.join(home, '.local', 'state');
+  return posix.join(base, 'betterazuremcp', FILE_NAME);
 }
