@@ -22,6 +22,13 @@ export interface Config {
   maxResponseBytes: number;
   /** When false (default), secret-looking values are masked before they leave the server. */
   showSecrets: boolean;
+  /**
+   * When set, the server only reads from these subscriptions (lower-case IDs). Enforced in the
+   * HTTP pipeline, so no tool can reach another subscription.
+   */
+  subscriptions: readonly string[] | undefined;
+  /** The server stops itself if its resident memory exceeds this. */
+  maxMemoryBytes: number;
   logLevel: LogLevel;
 }
 
@@ -44,6 +51,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     timeoutMs: parseInteger('TIMEOUT_SECONDS', read('TIMEOUT_SECONDS'), 60, 5, 600) * 1000,
     maxResponseBytes: parseInteger('MAX_RESPONSE_KB', read('MAX_RESPONSE_KB'), 12, 2, 256) * 1024,
     showSecrets: parseBoolean('SHOW_SECRETS', read('SHOW_SECRETS'), false),
+    subscriptions: parseSubscriptions('SUBSCRIPTIONS', read('SUBSCRIPTIONS')),
+    maxMemoryBytes:
+      parseInteger('MAX_MEMORY_MB', read('MAX_MEMORY_MB'), 1024, 256, 16_384) * 1024 * 1024,
     logLevel: parseEnum('LOG_LEVEL', read('LOG_LEVEL'), ['error', 'warn', 'info', 'debug'], 'info'),
   };
 }
@@ -75,6 +85,23 @@ function parseInteger(
     throw new ConfigError(`${ENV_PREFIX}${key} must be a whole number from ${min} to ${max}.`);
   }
   return parsed;
+}
+
+const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+function parseSubscriptions(key: string, value: string | undefined): string[] | undefined {
+  if (value === undefined) return undefined;
+  const ids = value
+    .split(/[\s,;]+/)
+    .map((id) => id.trim().toLowerCase())
+    .filter((id) => id !== '');
+  const invalid = ids.filter((id) => !GUID.test(id));
+  if (ids.length === 0 || invalid.length > 0) {
+    throw new ConfigError(
+      `${ENV_PREFIX}${key} must be a comma-separated list of subscription IDs (GUIDs).${invalid.length ? ` Not valid: ${invalid.join(', ')}.` : ''}`,
+    );
+  }
+  return [...new Set(ids)];
 }
 
 function parseBoolean(key: string, value: string | undefined, fallback: boolean): boolean {

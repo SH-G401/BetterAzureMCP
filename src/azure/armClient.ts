@@ -19,7 +19,14 @@ export interface Page<T> {
 
 /** Minimal Azure Resource Manager client. All traffic goes through the guarded HTTP stack. */
 export class ArmClient {
-  constructor(private readonly http: AzureHttp) {}
+  /**
+   * @param subscriptionScope When set, the only subscriptions the server may read
+   *   (BETTERAZUREMCP_SUBSCRIPTIONS). Also enforced by the HTTP pipeline.
+   */
+  constructor(
+    private readonly http: AzureHttp,
+    readonly subscriptionScope?: readonly string[],
+  ) {}
 
   request<T>(req: ArmRequest): Promise<T> {
     const url = new URL(ARM_ENDPOINT + req.path);

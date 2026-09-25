@@ -12,6 +12,7 @@ import {
   bearerTokenPolicy,
   egressPolicy,
   readOnlyPolicy,
+  subscriptionScopePolicy,
   userAgentPolicy,
   type TokenProvider,
 } from './policies.js';
@@ -24,14 +25,20 @@ export interface HttpStack {
 /**
  * The single HTTP stack used for every Azure call.
  *
- * Order matters: the egress and read-only guards run first, before a token is requested.
+ * Order matters: the egress, read-only and subscription-scope guards run first, before a token
+ * is requested.
  * Redirects are never followed, so the checked URL is the URL that is sent.
  * Proxy settings come from HTTPS_PROXY / NO_PROXY.
  */
-export function createHttpStack(tokens: TokenProvider, client?: HttpClient): HttpStack {
+export function createHttpStack(
+  tokens: TokenProvider,
+  client?: HttpClient,
+  subscriptions?: readonly string[],
+): HttpStack {
   const pipeline = createEmptyPipeline();
   pipeline.addPolicy(egressPolicy);
   pipeline.addPolicy(readOnlyPolicy);
+  if (subscriptions !== undefined) pipeline.addPolicy(subscriptionScopePolicy(subscriptions));
   pipeline.addPolicy(proxyPolicy());
   pipeline.addPolicy(decompressResponsePolicy());
   pipeline.addPolicy(userAgentPolicy(`${SERVER_NAME}/${VERSION}`));

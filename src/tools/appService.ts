@@ -192,6 +192,7 @@ export const appServiceOverviewTool = defineTool({
       ) ?? 'unknown runtime';
     const lastDeploy = recentDeployments[0];
     return {
+      untrusted: true,
       summary: [
         `${site.name} (${site.kind ?? 'app'}) is ${p.state ?? 'unknown'}, ${runtime}, plan ${plan?.sku?.name ?? '?'} x${plan?.sku?.capacity ?? '?'}.`,
         siteConfig.alwaysOn === false && !isFunctionApp ? 'Always On is off.' : '',
@@ -244,6 +245,7 @@ export const appServiceLogsTool = defineTool({
         ? 'The app may not have started yet, or logs were rotated away.'
         : 'Enable "Application logging (Filesystem)" under App Service logs, or use azure_logs_query.';
       return {
+        untrusted: true,
         summary: `No ${input.source} log files found for ${site.name}. ${hint}`,
         data: { files: [] },
       };
@@ -258,6 +260,7 @@ export const appServiceLogsTool = defineTool({
     );
     const lineCount = logs.reduce((n, l) => n + l.lines.length, 0);
     return {
+      untrusted: true,
       summary: `Last ${lineCount} ${input.source} log lines of ${site.name} from ${logs.length} file(s), oldest first.`,
       data: { logs },
       listKey: 'logs',

@@ -39,12 +39,19 @@ export const contextTool = defineTool({
       ctx.arm.list<Tenant>({ path: '/tenants', apiVersion: '2022-12-01', signal: ctx.signal }, 100),
     ]);
 
+    const scope = ctx.config.subscriptions;
+    const visible = scope
+      ? subscriptions.items.filter((s) => scope.includes(s.subscriptionId.toLowerCase()))
+      : subscriptions.items;
     const who = identity.principal ?? identity.objectId ?? 'unknown identity';
     const via = status.state === 'ok' ? ` via ${status.source}` : '';
-    const enabled = subscriptions.items.filter((s) => s.state === 'Enabled').length;
+    const enabled = visible.filter((s) => s.state === 'Enabled').length;
+    const limited = scope
+      ? ` Limited to ${plural(scope.length, 'configured subscription')} (BETTERAZUREMCP_SUBSCRIPTIONS).`
+      : '';
 
     return {
-      summary: `Signed in as ${who}${via}, tenant ${identity.tenantId ?? 'unknown'}. ${plural(subscriptions.items.length, 'subscription')} accessible (${enabled} enabled).`,
+      summary: `Signed in as ${who}${via}, tenant ${identity.tenantId ?? 'unknown'}. ${plural(visible.length, 'subscription')} accessible (${enabled} enabled).${limited}`,
       data: {
         identity: {
           principal: identity.principal,
@@ -59,7 +66,7 @@ export const contextTool = defineTool({
           name: t.displayName,
           domain: t.defaultDomain,
         })),
-        subscriptions: subscriptions.items.map((s) => ({
+        subscriptions: visible.map((s) => ({
           id: s.subscriptionId,
           name: s.displayName,
           state: s.state,
@@ -69,6 +76,7 @@ export const contextTool = defineTool({
           version: VERSION,
           readOnly: true,
           tenantOverride: ctx.config.tenantId,
+          subscriptionScope: scope,
           timeoutSeconds: ctx.config.timeoutMs / 1000,
           secretsMasked: !ctx.config.showSecrets,
         },

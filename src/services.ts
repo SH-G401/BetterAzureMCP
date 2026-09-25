@@ -30,8 +30,10 @@ export function createAzureServices(
     overrides.credentials ?? createCredentialChain(config),
     logger,
   );
-  const http = new AzureHttp(createHttpStack(credentials, overrides.httpClient));
-  const arm = new ArmClient(http);
+  const http = new AzureHttp(
+    createHttpStack(credentials, overrides.httpClient, config.subscriptions),
+  );
+  const arm = new ArmClient(http, config.subscriptions);
   return {
     config,
     credentials,

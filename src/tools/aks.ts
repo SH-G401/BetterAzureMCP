@@ -287,6 +287,7 @@ export const aksWorkloadsTool = defineTool({
         nodes: nodeRows,
       }[input.view];
       return {
+        untrusted: true,
         summary: `${rows.length} ${input.view}${ns ? ` in namespace ${ns}` : ''}.`,
         data: { [input.view]: limit(rows as unknown[]) },
         listKey: input.view,
@@ -305,6 +306,7 @@ export const aksWorkloadsTool = defineTool({
         : `${badPods.length} problem pod(s), ${badDeployments.length} deployment(s) not fully available, ${badNodes.length} node(s) with issues, ${eventRows.length} Warning event(s)${ns ? ` in namespace ${ns}` : ''}.`;
 
     return {
+      untrusted: true,
       summary,
       data: {
         pods: limit(badPods),
@@ -363,6 +365,7 @@ export const aksPodLogsTool = defineTool({
     );
     const lines = text.split('\n').filter((l) => l !== '');
     return {
+      untrusted: true,
       summary:
         lines.length === 0
           ? `No log output from ${input.namespace}/${input.pod}${input.container ? ` (${input.container})` : ''}${input.previous ? ' previous instance' : ''}.`

@@ -26,6 +26,20 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run format:check
+      # Dependencies are bundled into the published file, so their advisories apply to users.
+      - run: npm audit --audit-level=high
+
+  soak:
+    name: Soak test (memory)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run soak
 
   test:
     name: Test (${{ matrix.os }}, Node ${{ matrix.node }})

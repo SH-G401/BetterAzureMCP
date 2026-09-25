@@ -34,6 +34,57 @@ export const readOnlyPolicy: PipelinePolicy = {
   },
 };
 
+/**
+ * Refuses requests that name a subscription outside the configured allowlist
+ * (BETTERAZUREMCP_SUBSCRIPTIONS), and Resource Graph queries that are not limited to it.
+ */
+export function subscriptionScopePolicy(allowed: readonly string[]): PipelinePolicy {
+  const allow = new Set(allowed.map((id) => id.toLowerCase()));
+  return {
+    name: 'betterazuremcp-subscription-scope',
+    sendRequest(request, next) {
+      const url = new URL(request.url);
+      const blocked = checkSubscriptionScope(url, request.body, allow);
+      if (blocked !== undefined) return Promise.reject(new PolicyViolationError(blocked));
+      return next(request);
+    },
+  };
+}
+
+export function checkSubscriptionScope(
+  url: URL,
+  body: unknown,
+  allow: ReadonlySet<string>,
+): string | undefined {
+  let path: string;
+  try {
+    path = decodeURIComponent(url.pathname).toLowerCase();
+  } catch {
+    return 'Blocked request with a malformed path.';
+  }
+  const named = /\/subscriptions\/([^/]+)/.exec(path)?.[1];
+  if (named !== undefined && !allow.has(named)) {
+    return `Blocked: subscription ${named} is outside BETTERAZUREMCP_SUBSCRIPTIONS.`;
+  }
+  if (path.replace(/\/+$/, '') === '/providers/microsoft.resourcegraph/resources') {
+    let query: { subscriptions?: unknown; managementGroups?: unknown } = {};
+    try {
+      query = JSON.parse(typeof body === 'string' ? body : '{}') as typeof query;
+    } catch {
+      return 'Blocked: unreadable Resource Graph query.';
+    }
+    const subs = Array.isArray(query.subscriptions) ? (query.subscriptions as unknown[]) : [];
+    if (query.managementGroups !== undefined || subs.length === 0) {
+      return 'Blocked: Resource Graph queries must be limited to BETTERAZUREMCP_SUBSCRIPTIONS.';
+    }
+    const outside = subs.filter((s) => typeof s !== 'string' || !allow.has(s.toLowerCase()));
+    if (outside.length > 0) {
+      return `Blocked: subscription ${String(outside[0])} is outside BETTERAZUREMCP_SUBSCRIPTIONS.`;
+    }
+  }
+  return undefined;
+}
+
 export interface TokenProvider {
   getToken(scope: string, signal?: AbortSignal): Promise<string>;
 }

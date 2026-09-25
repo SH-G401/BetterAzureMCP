@@ -45,6 +45,7 @@ export const getResourceTool = defineTool({
     const state = body.properties?.provisioningState ?? body.properties?.state;
     const where = body.location ? ` in ${body.location}` : '';
     return {
+      untrusted: true,
       summary: `${body.type ?? resource.type} "${body.name ?? resource.name}"${where}${state ? `, state ${state}` : ''} (API version ${apiVersion}).`,
       data: body,
     };

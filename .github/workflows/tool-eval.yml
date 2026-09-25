@@ -1,0 +1,34 @@
+name: Tool-selection eval
+
+# Runs only on demand: every run calls the Claude API and costs money.
+# Needs an ANTHROPIC_API_KEY repository secret.
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: Model to evaluate
+        default: claude-opus-5
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run eval:tools
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          EVAL_MODEL: ${{ inputs.model }}
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: tool-selection-results
+          path: eval/results/

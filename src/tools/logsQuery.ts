@@ -33,6 +33,7 @@ export const logsQueryTool = defineTool({
     const more = result.truncated ? ` More rows exist; showing the first ${input.limit}.` : '';
     const warning = result.warning ? ` Warning: ${result.warning}` : '';
     return {
+      untrusted: true,
       summary: `${plural(result.rows.length, 'row')} from the last ${input.hours} hours.${more}${warning}`,
       data: { rows: result.rows },
       listKey: 'rows',

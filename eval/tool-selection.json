@@ -1,0 +1,225 @@
+{
+  "description": "Realistic debugging prompts and the tool(s) a model should call first. Used by scripts/eval-tool-selection.mjs and checked for consistency by test/unit/toolSelection.test.ts.",
+  "cases": [
+    {
+      "prompt": "Which Azure account am I signed in with, and which subscriptions can I see?",
+      "expected": ["azure_context"]
+    },
+    {
+      "prompt": "Every tool returns 403 for me. Which tenant and identity is the Azure server using?",
+      "expected": ["azure_context"]
+    },
+    {
+      "prompt": "List my Azure subscriptions.",
+      "expected": ["azure_context"]
+    },
+    {
+      "prompt": "Find the App Service called orders-api.",
+      "expected": ["azure_find_resources"]
+    },
+    {
+      "prompt": "Which resources are tagged env=prod in resource group rg-shop?",
+      "expected": ["azure_find_resources", "azure_resource_graph_query"]
+    },
+    {
+      "prompt": "Where is the payments container app deployed? I need its resource ID.",
+      "expected": ["azure_find_resources"]
+    },
+    {
+      "prompt": "How many web apps do we have per Azure region, across all subscriptions?",
+      "expected": ["azure_resource_graph_query"]
+    },
+    {
+      "prompt": "Use Resource Graph to list all virtual machines that are deallocated.",
+      "expected": ["azure_resource_graph_query"]
+    },
+    {
+      "prompt": "Count our resources by resource type in subscription 11111111-1111-1111-1111-111111111111.",
+      "expected": ["azure_resource_graph_query"]
+    },
+    {
+      "prompt": "Show me the full configuration of the database /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Sql/servers/shop-sql/databases/orders.",
+      "expected": ["azure_get_resource"]
+    },
+    {
+      "prompt": "What SKU, TLS version and network rules does /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Storage/storageAccounts/shopstorage01 have?",
+      "expected": ["azure_get_resource"]
+    },
+    {
+      "prompt": "Is public network access enabled on /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Storage/storageAccounts/shopstorage01?",
+      "expected": ["azure_get_resource"]
+    },
+    {
+      "prompt": "Is Azure reporting a platform problem or outage for /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Web/sites/orders-api?",
+      "expected": ["azure_resource_health"]
+    },
+    {
+      "prompt": "Was /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Sql/servers/shop-sql/databases/orders unavailable last night according to Azure Resource Health?",
+      "expected": ["azure_resource_health"]
+    },
+    {
+      "prompt": "Is there an active Azure service issue that could affect /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Web/sites/orders-api?",
+      "expected": ["azure_resource_health"]
+    },
+    {
+      "prompt": "What configuration changed on /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Web/sites/orders-api in the last 24 hours?",
+      "expected": ["azure_recent_changes"]
+    },
+    {
+      "prompt": "Show the before and after values of recent property changes to /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Sql/servers/shop-sql/databases/orders.",
+      "expected": ["azure_recent_changes"]
+    },
+    {
+      "prompt": "Did anyone change resources in resource group /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop this week? Show what changed.",
+      "expected": ["azure_recent_changes", "azure_activity_log"]
+    },
+    {
+      "prompt": "Who restarted /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Web/sites/orders-api yesterday?",
+      "expected": ["azure_activity_log"]
+    },
+    {
+      "prompt": "Show failed deployments and operations in resource group /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop over the last 3 days, with error messages.",
+      "expected": ["azure_activity_log"]
+    },
+    {
+      "prompt": "Which control-plane operations failed in subscription /subscriptions/11111111-1111-1111-1111-111111111111 today?",
+      "expected": ["azure_activity_log"]
+    },
+    {
+      "prompt": "Where do the logs of /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Web/sites/orders-api go? Which Log Analytics workspace should I query?",
+      "expected": ["azure_telemetry_locations"]
+    },
+    {
+      "prompt": "Does /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.ContainerService/managedClusters/aks-prod send container logs to Log Analytics?",
+      "expected": ["azure_telemetry_locations", "azure_aks_overview"]
+    },
+    {
+      "prompt": "Is diagnostic logging configured for /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Sql/servers/shop-sql/databases/orders, and which log categories are enabled?",
+      "expected": ["azure_telemetry_locations"]
+    },
+    {
+      "prompt": "What was the CPU usage of /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Web/sites/orders-api over the last 6 hours?",
+      "expected": ["azure_metrics"]
+    },
+    {
+      "prompt": "Show HTTP 5xx counts for /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Web/sites/orders-api split by instance for the last hour.",
+      "expected": ["azure_metrics"]
+    },
+    {
+      "prompt": "Which platform metrics are available for /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Sql/servers/shop-sql/databases/orders?",
+      "expected": ["azure_metrics"]
+    },
+    {
+      "prompt": "Is the database /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Sql/servers/shop-sql/databases/orders hitting its DTU limit?",
+      "expected": ["azure_metrics"]
+    },
+    {
+      "prompt": "Run this KQL against workspace /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.OperationalInsights/workspaces/shop-logs: AppServiceHTTPLogs | where ScStatus >= 500 | summarize count() by CsUriStem",
+      "expected": ["azure_logs_query"]
+    },
+    {
+      "prompt": "Query /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.OperationalInsights/workspaces/shop-logs for the latest Heartbeat record per computer.",
+      "expected": ["azure_logs_query"]
+    },
+    {
+      "prompt": "Search the logs of /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Web/sites/orders-api in Log Analytics for 'OutOfMemoryException' over the last 2 days.",
+      "expected": ["azure_logs_query"]
+    },
+    {
+      "prompt": "Why is the checkout service failing? It reports to Application Insights /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/microsoft.insights/components/shop-ai.",
+      "expected": ["azure_appinsights_failures"]
+    },
+    {
+      "prompt": "What are the top exceptions in /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/microsoft.insights/components/shop-ai this week?",
+      "expected": ["azure_appinsights_failures"]
+    },
+    {
+      "prompt": "Which dependencies (databases, HTTP calls) are failing for /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/microsoft.insights/components/shop-ai?",
+      "expected": ["azure_appinsights_failures"]
+    },
+    {
+      "prompt": "What is the failure rate and the slowest operations of /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Web/sites/orders-api according to Application Insights?",
+      "expected": ["azure_appinsights_failures"]
+    },
+    {
+      "prompt": "Show the end-to-end transaction for operation 4bf92f3577b34da6a3ce929d0e0e4736 in /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/microsoft.insights/components/shop-ai.",
+      "expected": ["azure_appinsights_trace"]
+    },
+    {
+      "prompt": "Trace operation 0af7651916cd43dd8448eb211c80319c through all services using /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/microsoft.insights/components/shop-ai.",
+      "expected": ["azure_appinsights_trace"]
+    },
+    {
+      "prompt": "Summarize /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Web/sites/orders-api: runtime stack, plan, Always On and recent deployments.",
+      "expected": ["azure_appservice_overview"]
+    },
+    {
+      "prompt": "Did the last code deployment to /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Web/sites/orders-api succeed?",
+      "expected": ["azure_appservice_overview"]
+    },
+    {
+      "prompt": "Which functions does the function app /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Web/sites/orders-jobs contain, and are any disabled?",
+      "expected": ["azure_appservice_overview"]
+    },
+    {
+      "prompt": "Show the latest application output (stdout) of /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Web/sites/orders-api.",
+      "expected": ["azure_appservice_logs"]
+    },
+    {
+      "prompt": "The container of /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Web/sites/orders-api keeps failing to start. Show its recent platform container logs.",
+      "expected": ["azure_appservice_logs"]
+    },
+    {
+      "prompt": "Run Azure's built-in 'Diagnose and solve problems' checks for /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.Web/sites/orders-api.",
+      "expected": ["azure_diagnostics"]
+    },
+    {
+      "prompt": "Which built-in diagnostic detectors are available for /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.App/containerApps/payments?",
+      "expected": ["azure_diagnostics"]
+    },
+    {
+      "prompt": "Why is the latest revision of /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.App/containerApps/payments unhealthy? Show revisions and replica restarts.",
+      "expected": ["azure_containerapp_overview"]
+    },
+    {
+      "prompt": "How many replicas is /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.App/containerApps/payments running, and which image is deployed?",
+      "expected": ["azure_containerapp_overview"]
+    },
+    {
+      "prompt": "Show the console output of /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.App/containerApps/payments from the last hour.",
+      "expected": ["azure_containerapp_logs"]
+    },
+    {
+      "prompt": "Show the system logs of /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.App/containerApps/payments: probe failures, image pulls and restarts.",
+      "expected": ["azure_containerapp_logs"]
+    },
+    {
+      "prompt": "Which Kubernetes version is /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.ContainerService/managedClusters/aks-prod on, and are upgrades available?",
+      "expected": ["azure_aks_overview"]
+    },
+    {
+      "prompt": "Is /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.ContainerService/managedClusters/aks-prod running, and what node pools does it have?",
+      "expected": ["azure_aks_overview"]
+    },
+    {
+      "prompt": "Which pods are crash-looping in /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.ContainerService/managedClusters/aks-prod?",
+      "expected": ["azure_aks_workloads"]
+    },
+    {
+      "prompt": "Show Warning events in namespace shop on /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.ContainerService/managedClusters/aks-prod.",
+      "expected": ["azure_aks_workloads"]
+    },
+    {
+      "prompt": "Are all deployments in namespace shop on /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.ContainerService/managedClusters/aks-prod fully available?",
+      "expected": ["azure_aks_workloads"]
+    },
+    {
+      "prompt": "Show the logs of pod api-7d9f8-x2k in namespace shop on /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.ContainerService/managedClusters/aks-prod.",
+      "expected": ["azure_aks_pod_logs"]
+    },
+    {
+      "prompt": "Pod api-7d9f8-x2k in namespace shop on /subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-shop/providers/Microsoft.ContainerService/managedClusters/aks-prod keeps crashing. Show the logs of the previous container instance.",
+      "expected": ["azure_aks_pod_logs"]
+    }
+  ]
+}

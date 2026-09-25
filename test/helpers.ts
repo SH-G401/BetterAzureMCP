@@ -83,6 +83,8 @@ export const testConfig: Config = {
   timeoutMs: 5_000,
   maxResponseBytes: 64 * 1024,
   showSecrets: false,
+  subscriptions: undefined,
+  maxMemoryBytes: 1024 * 1024 * 1024,
   logLevel: 'error',
 };
 

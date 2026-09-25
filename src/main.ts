@@ -16,6 +16,8 @@ Configuration (environment variables):
   BETTERAZUREMCP_CREDENTIAL        auto | azurecli | azd | azurepowershell | environment | managedidentity
   BETTERAZUREMCP_TIMEOUT_SECONDS   Deadline per tool call (default 60)
   BETTERAZUREMCP_MAX_RESPONSE_KB   Size limit per tool result (default 12)
+  BETTERAZUREMCP_SUBSCRIPTIONS     Comma-separated subscription IDs; the server reads only these
+  BETTERAZUREMCP_MAX_MEMORY_MB     Stop the server if it ever uses more memory (default 1024)
   BETTERAZUREMCP_SHOW_SECRETS      Set to true to disable masking of secret values
   BETTERAZUREMCP_LOG_LEVEL         error | warn | info | debug (default info)
 
@@ -80,6 +82,8 @@ async function serve(): Promise<number> {
 
   const services = createAzureServices(config, logger);
   services.credentials.prewarm();
+  const { startMemoryWatchdog } = await import('./runtime/memoryWatchdog.js');
+  startMemoryWatchdog({ limitBytes: config.maxMemoryBytes, logger });
 
   const handle = serveStdio(() => createMcpServer(services, logger), {
     transport: new StdioServerTransport(process.stdin, protocolOut),
