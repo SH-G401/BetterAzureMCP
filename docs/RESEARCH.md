@@ -1,5 +1,7 @@
 # BetterAzureMCP: Research Phase
 
+> **Update 2026-09-25:** Decisions taken: TypeScript (not Go), read-only, GitHub Copilot Desktop + VS Code, privacy-first. See [PLAN.md](PLAN.md). Section 4 below is kept as the original analysis.
+
 _Research date: 2026-09-25. Baseline studied: Microsoft Azure MCP Server `3.0.0-beta.47` (released 2026-09-24), source at [`microsoft/mcp`](https://github.com/microsoft/mcp) `main`._
 
 ## TL;DR
