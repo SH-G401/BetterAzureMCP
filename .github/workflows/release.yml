@@ -1,8 +1,12 @@
 name: Release
 
+# Publishes to npm (with provenance) and creates a GitHub release.
+# Triggered by pushing a version tag, e.g. `git tag v1.0.0 && git push origin v1.0.0`.
+# Can be re-run from the Actions tab: choose the tag in "Use workflow from".
 on:
   push:
     tags: ['v*.*.*']
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -20,11 +24,26 @@ jobs:
           cache: npm
           registry-url: https://registry.npmjs.org
 
-      - name: Check that the tag matches package.json
+      - name: Check the release
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
+          if [ "$GITHUB_REF_TYPE" != "tag" ]; then
+            echo "::error::Run this workflow from a version tag (vX.Y.Z), not from a branch." >&2
+            exit 1
+          fi
+          name="$(node -p "require('./package.json').name")"
           version="$(node -p "require('./package.json').version")"
           if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "Tag $GITHUB_REF_NAME does not match package.json version $version" >&2
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version." >&2
+            exit 1
+          fi
+          if [ -z "$NPM_TOKEN" ]; then
+            echo "::error::The NPM_TOKEN repository secret is not set. Add an npm access token with publish rights under Settings > Secrets and variables > Actions." >&2
+            exit 1
+          fi
+          if npm view "$name@$version" version >/dev/null 2>&1; then
+            echo "::error::$name@$version is already published. Bump the version first." >&2
             exit 1
           fi
 
@@ -43,6 +62,7 @@ jobs:
           awk -v v="$version" '
             $0 ~ "^## \\[" v "\\]" { found = 1; next }
             found && /^## \[/ { exit }
+            found && /^\[[^]]+\]: / { exit }
             found { print }
           ' CHANGELOG.md > release-notes.md
           gh release create "$GITHUB_REF_NAME" dist/betterazuremcp.mjs \
