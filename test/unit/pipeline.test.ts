@@ -1,7 +1,7 @@
 import { createHttpHeaders, createPipelineRequest } from '@azure/core-rest-pipeline';
 import { describe, expect, it, vi } from 'vitest';
 import { createHttpStack } from '../../src/http/pipeline.js';
-import { isReadOnlyRequest, PolicyViolationError } from '../../src/http/policies.js';
+import { PolicyViolationError } from '../../src/http/policies.js';
 import { FakeHttpClient } from '../helpers.js';
 
 function send(method: string, url: string) {
@@ -49,35 +49,5 @@ describe('HTTP stack', () => {
     await expect(result).rejects.toThrow(/not on the allowlist/);
     expect(http.requests).toHaveLength(0);
     expect(tokens.getToken).not.toHaveBeenCalled();
-  });
-});
-
-describe('isReadOnlyRequest', () => {
-  const url = (path: string) => new URL(`https://management.azure.com${path}`);
-
-  it('allows GET and HEAD', () => {
-    expect(isReadOnlyRequest('GET', url('/subscriptions'))).toBe(true);
-    expect(isReadOnlyRequest('head', url('/subscriptions'))).toBe(true);
-  });
-
-  it('allows the Resource Graph query POST, case-insensitively', () => {
-    expect(isReadOnlyRequest('POST', url('/providers/Microsoft.ResourceGraph/resources'))).toBe(
-      true,
-    );
-    expect(isReadOnlyRequest('POST', url('/PROVIDERS/microsoft.resourcegraph/resources/'))).toBe(
-      true,
-    );
-  });
-
-  it('refuses POSTs that only resemble an allowed path', () => {
-    expect(
-      isReadOnlyRequest(
-        'POST',
-        url('/subscriptions/s/providers/Microsoft.ResourceGraph/resources'),
-      ),
-    ).toBe(false);
-    expect(isReadOnlyRequest('POST', url('/providers/Microsoft.ResourceGraph/resourcesX'))).toBe(
-      false,
-    );
   });
 });

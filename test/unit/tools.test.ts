@@ -7,7 +7,7 @@ import { getResourceTool } from '../../src/tools/getResource.js';
 import { TOOLS } from '../../src/tools/index.js';
 import { resourceGraphQueryTool } from '../../src/tools/resourceGraphQuery.js';
 import { defineTool } from '../../src/tools/types.js';
-import { servicesWith, type RecordedRequest } from '../helpers.js';
+import { servicesWith, TOOL_NAMES, type RecordedRequest } from '../helpers.js';
 import { z } from 'zod';
 
 const SUB = '00000000-0000-0000-0000-000000000001';
@@ -27,12 +27,8 @@ function graphResponse(rows: Record<string, unknown>[]) {
 
 describe('tool catalog', () => {
   it('has unique, stable names', () => {
-    expect(TOOLS.map((t) => t.name)).toEqual([
-      'azure_context',
-      'azure_find_resources',
-      'azure_resource_graph_query',
-      'azure_get_resource',
-    ]);
+    expect(TOOLS.map((t) => t.name)).toEqual(TOOL_NAMES);
+    expect(new Set(TOOL_NAMES).size).toBe(TOOL_NAMES.length);
   });
 
   it('keeps descriptions short enough to be cheap in every request', () => {

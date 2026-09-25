@@ -27,13 +27,22 @@ export class ApiVersionResolver {
       throw new ToolInputError(`Cannot determine the resource provider for ${resource.id}.`);
     }
 
-    const info = await this.providerInfo(resource.provider, signal);
-    const wanted = resource.type.slice(resource.provider.length + 1).toLowerCase();
+    return this.resolveType(
+      resource.provider,
+      resource.type.slice(resource.provider.length + 1),
+      signal,
+    );
+  }
+
+  /** API version for `resourceType` (e.g. `sites/slots`) of `provider` (e.g. `Microsoft.Web`). */
+  async resolveType(provider: string, resourceType: string, signal?: AbortSignal): Promise<string> {
+    const info = await this.providerInfo(provider, signal);
+    const wanted = resourceType.toLowerCase();
     const match = info.resourceTypes?.find((t) => t.resourceType.toLowerCase() === wanted);
     const version = pickApiVersion(match?.apiVersions ?? []);
     if (version === undefined) {
       throw new ToolInputError(
-        `No API version found for ${resource.type}. Pass apiVersion explicitly.`,
+        `No API version found for ${provider}/${resourceType}. Pass apiVersion explicitly.`,
       );
     }
     return version;

@@ -3,6 +3,7 @@ import { once } from 'node:events';
 import { Client } from '@modelcontextprotocol/client';
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio';
 import { afterEach, describe, expect, it } from 'vitest';
+import { TOOL_NAMES } from '../helpers.js';
 
 const SERVER = 'dist/betterazuremcp.mjs';
 
@@ -46,12 +47,7 @@ describe.each([
   it('lists the read-only tools', async () => {
     const client = await connect(mode);
     const { tools } = await client.listTools();
-    expect(tools.map((t) => t.name)).toEqual([
-      'azure_context',
-      'azure_find_resources',
-      'azure_resource_graph_query',
-      'azure_get_resource',
-    ]);
+    expect(tools.map((t) => t.name)).toEqual(TOOL_NAMES);
     for (const tool of tools) {
       expect(tool.annotations).toMatchObject({ readOnlyHint: true, destructiveHint: false });
     }

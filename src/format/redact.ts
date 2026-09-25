@@ -32,6 +32,10 @@ export function redactSecrets(value: unknown): unknown {
 }
 
 function redact(value: unknown, key: string | undefined): unknown {
+  if (key !== undefined && isSecretKey(key) && value !== null && typeof value === 'object') {
+    // e.g. a change record { "properties.adminPassword": { previousValue, newValue } }
+    return maskAllStrings(value);
+  }
   if (typeof value === 'string') {
     if (key !== undefined && isSecretKey(key) && value !== '') return REDACTED;
     return SECRET_VALUE_PATTERNS.some((p) => p.test(value)) ? REDACTED : value;
@@ -42,6 +46,17 @@ function redact(value: unknown, key: string | undefined): unknown {
   if (value !== null && typeof value === 'object') {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value)) out[k] = redact(v, k);
+    return out;
+  }
+  return value;
+}
+
+function maskAllStrings(value: unknown): unknown {
+  if (typeof value === 'string') return value === '' ? value : REDACTED;
+  if (Array.isArray(value)) return value.map(maskAllStrings);
+  if (value !== null && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value)) out[k] = maskAllStrings(v);
     return out;
   }
   return value;
