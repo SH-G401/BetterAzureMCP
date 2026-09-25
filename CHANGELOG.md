@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+Addresses user complaints about the official Azure MCP Server; see [docs/COMPLAINTS.md](docs/COMPLAINTS.md).
+
+### Added
+
+- `BETTERAZUREMCP_SUBSCRIPTIONS` limits the server to chosen subscriptions, enforced in the HTTP pipeline.
+- Memory watchdog: the server stops itself if it exceeds `BETTERAZUREMCP_MAX_MEMORY_MB` (default 1024).
+- Prompt-injection hardening: results that carry free text are marked as untrusted, and text that reads like instructions to an AI assistant is flagged with a warning.
+- Tool-selection eval (`npm run eval:tools`) with a prompt dataset, and CI checks for dataset coverage and description overlap.
+- Soak test (`npm run soak`) in CI that fails on memory growth.
+- Live check (`npm run live-check`) that runs every tool against your own tenant.
+- CodeQL analysis and `npm audit` in CI.
+
 ## [1.0.0] - 2026-09-25
 
 First stable release. Tool names and parameters are now covered by semantic versioning.

@@ -12,13 +12,16 @@ npm run check     # typecheck, lint, format check and tests
 npm run build     # bundles to dist/betterazuremcp.mjs
 ```
 
-| Script              | Purpose                                                                   |
-| ------------------- | ------------------------------------------------------------------------- |
-| `npm run typecheck` | TypeScript, strict mode                                                   |
-| `npm run lint`      | ESLint with type-aware rules                                              |
-| `npm run format`    | Prettier, writes changes                                                  |
-| `npm test`          | Unit tests and stdio integration tests (Vitest). Builds the bundle first. |
-| `npm run build`     | Single-file ESM bundle with no runtime dependencies                       |
+| Script               | Purpose                                                                                                                                                          |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run typecheck`  | TypeScript, strict mode                                                                                                                                          |
+| `npm run lint`       | ESLint with type-aware rules                                                                                                                                     |
+| `npm run format`     | Prettier, writes changes                                                                                                                                         |
+| `npm test`           | Unit tests and stdio integration tests (Vitest). Builds the bundle first.                                                                                        |
+| `npm run build`      | Single-file ESM bundle with no runtime dependencies                                                                                                              |
+| `npm run soak`       | Soak test: thousands of calls against the built server with a capped heap; fails on memory growth                                                                |
+| `npm run live-check` | Runs every tool against your own Azure tenant (after `az login`) and prints a pass/fail table                                                                    |
+| `npm run eval:tools` | Tool-selection eval: asks Claude which tool it would call for each prompt in `eval/tool-selection.json`. Needs Anthropic API credentials and costs money per run |
 
 To try a local build in a client, point the client at `node /path/to/BetterAzureMCP/dist/betterazuremcp.mjs`, or run `npm link` once and use `betterazuremcp`.
 
@@ -54,12 +57,20 @@ See [docs/architecture.md](docs/architecture.md) for how a tool call flows throu
 6. **Tool names are a public API.** Renaming or removing a tool is a breaking change.
 7. **Keep results small and actionable.** Start with a one-line summary. Return error messages that tell the user what to do.
 
+## Tool-selection eval
+
+`eval/tool-selection.json` holds realistic debugging prompts and the tool a model should call first. Two checks use it:
+
+- `test/unit/toolSelection.test.ts` runs in CI for free. It checks that every tool is covered by at least two prompts, and that no two tool descriptions share too many distinctive words. Overlapping descriptions are the main cause of wrong tool choices.
+- `npm run eval:tools` sends the tool definitions and prompts to the Claude API and reports how often the first tool call is right. It fails below 95%. Run it when you add a tool or change a description; it can also be started from the Actions tab (**Tool-selection eval**). It sends only the tool definitions and the synthetic prompts, never data from an Azure tenant.
+
 ## Adding a tool
 
 1. Create `src/tools/<name>.ts` with `defineTool({...})`: a `zod` input schema with `.describe()` on every field, and a description that includes a concrete example.
 2. Register it in `src/tools/index.ts`.
-3. Add unit tests with `servicesWith(...)` from `test/helpers.ts`, covering the requests it makes and the summary it returns.
-4. Update the tool table in `README.md` and the entry in `CHANGELOG.md`.
+3. Add unit tests with `servicesWith(...)` from `test/helpers.ts`, covering the requests it makes and the summary it returns. Set `untrusted: true` on the result if it carries free text such as log lines or messages.
+4. Add at least two prompts for it to `eval/tool-selection.json`, and run `npm run eval:tools`.
+5. Update the tool table in `README.md` and the entry in `CHANGELOG.md`.
 
 ## Releasing
 
