@@ -21,6 +21,13 @@ updates:
             '@types/*',
             'globals',
           ]
+    ignore:
+      # typescript-eslint 8.x supports TypeScript < 6.1 only. Remove once it supports newer versions.
+      - dependency-name: 'typescript'
+        versions: ['>=6.1.0']
+      # Type definitions must match the oldest supported Node.js version (engines: >=22).
+      - dependency-name: '@types/node'
+        versions: ['>=23']
   - package-ecosystem: github-actions
     directory: /
     schedule:
