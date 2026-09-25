@@ -74,11 +74,22 @@ See [docs/architecture.md](docs/architecture.md) for how a tool call flows throu
 
 ## Releasing
 
+One-time setup: create an npm access token that can publish `betterazuremcp` (on npmjs.com: **Access Tokens** → **Generate New Token** → **Granular Access Token**, with read and write permission for packages). Add it as the `NPM_TOKEN` repository secret under **Settings** → **Secrets and variables** → **Actions**.
+
+For each release:
+
 1. Update `version` in `package.json` (and run `npm install --package-lock-only`), and move the `Unreleased` entries in `CHANGELOG.md` under the new version.
 2. Merge to `main`.
 3. Tag the merge commit and push the tag: `git tag v1.2.3 && git push origin v1.2.3`.
 
-The [release workflow](.github/workflows/release.yml) checks that the tag matches `package.json`, runs the full check, publishes to npm with provenance and creates a GitHub release with the bundle attached. It needs an `NPM_TOKEN` repository secret with publish rights.
+The [release workflow](.github/workflows/release.yml) then:
+
+- checks that the tag matches `package.json`, that `NPM_TOKEN` is set, and that the version is not already on npm;
+- runs the full check;
+- publishes to npm with [provenance](https://docs.npmjs.com/generating-provenance-statements);
+- creates a GitHub release with the changelog entry and the bundle attached.
+
+If a run fails, fix the cause and re-run it from the **Actions** tab, choosing the tag under **Use workflow from**.
 
 ## Pull requests
 
