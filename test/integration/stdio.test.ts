@@ -1,4 +1,7 @@
 import { spawn } from 'node:child_process';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { once } from 'node:events';
 import { Client } from '@modelcontextprotocol/client';
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio';
@@ -15,7 +18,13 @@ function serverEnv(): Record<string, string> {
       env[key] = value;
     }
   }
-  return { ...env, BETTERAZUREMCP_CREDENTIAL: 'environment', BETTERAZUREMCP_LOG_LEVEL: 'error' };
+  return {
+    ...env,
+    BETTERAZUREMCP_CREDENTIAL: 'environment',
+    BETTERAZUREMCP_LOG_LEVEL: 'error',
+    // Never read or write the developer's own remembered context.
+    BETTERAZUREMCP_REMEMBER_CONTEXT: 'false',
+  };
 }
 
 const clients: Client[] = [];
@@ -70,6 +79,35 @@ describe.each([
     });
     expect(result.isError).toBe(true);
     expect(JSON.stringify(result.content)).toContain('not a valid Azure resource ID');
+  });
+});
+
+describe('remembered context', () => {
+  it('tells the model which subscription the user worked in last time', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'betterazuremcp-'));
+    writeFileSync(
+      join(dir, 'context.json'),
+      JSON.stringify({
+        subscriptionId: 'aaaaaaaa-0000-0000-0000-000000000001',
+        subscriptionName: 'Orders Production',
+        tenantId: '11111111-1111-1111-1111-111111111111',
+      }),
+    );
+    const client = new Client({ name: 'integration-test', version: '1.0.0' });
+    await client.connect(
+      new StdioClientTransport({
+        command: process.execPath,
+        args: [SERVER],
+        env: {
+          ...serverEnv(),
+          BETTERAZUREMCP_REMEMBER_CONTEXT: 'true',
+          BETTERAZUREMCP_STATE_DIR: dir,
+        },
+        stderr: 'ignore',
+      }),
+    );
+    clients.push(client);
+    expect(client.getInstructions()).toContain('Current context: subscription "Orders Production"');
   });
 });
 

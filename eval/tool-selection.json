@@ -14,6 +14,18 @@
       "expected": ["azure_context"]
     },
     {
+      "prompt": "Switch to the Orders Staging subscription; look there from now on.",
+      "expected": ["azure_context"]
+    },
+    {
+      "prompt": "From now on, work in the fabrikam.onmicrosoft.com directory.",
+      "expected": ["azure_context"]
+    },
+    {
+      "prompt": "Which subscription are you currently looking in?",
+      "expected": ["azure_context"]
+    },
+    {
       "prompt": "Find the App Service called orders-api.",
       "expected": ["azure_find_resources"]
     },

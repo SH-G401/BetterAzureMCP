@@ -27,6 +27,10 @@ export interface Config {
    * HTTP pipeline, so no tool can reach another subscription.
    */
   subscriptions: readonly string[] | undefined;
+  /** Remember the most recently used subscription and directory across sessions. */
+  rememberContext: boolean;
+  /** Directory for the remembered context. Defaults to the per-user application data directory. */
+  stateDir: string | undefined;
   /** The server stops itself if its resident memory exceeds this. */
   maxMemoryBytes: number;
   logLevel: LogLevel;
@@ -52,6 +56,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     maxResponseBytes: parseInteger('MAX_RESPONSE_KB', read('MAX_RESPONSE_KB'), 12, 2, 256) * 1024,
     showSecrets: parseBoolean('SHOW_SECRETS', read('SHOW_SECRETS'), false),
     subscriptions: parseSubscriptions('SUBSCRIPTIONS', read('SUBSCRIPTIONS')),
+    rememberContext: parseBoolean('REMEMBER_CONTEXT', read('REMEMBER_CONTEXT'), true),
+    stateDir: read('STATE_DIR'),
     maxMemoryBytes:
       parseInteger('MAX_MEMORY_MB', read('MAX_MEMORY_MB'), 1024, 256, 16_384) * 1024 * 1024,
     logLevel: parseEnum('LOG_LEVEL', read('LOG_LEVEL'), ['error', 'warn', 'info', 'debug'], 'info'),

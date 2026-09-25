@@ -8,6 +8,7 @@ Addresses user complaints about the official Azure MCP Server; see [docs/COMPLAI
 
 ### Added
 
+- Current subscription: the server remembers the subscription and directory you worked in most recently, across sessions, and tells the assistant, so it no longer has to ask where to look. `azure_context` switches subscription or directory by name. `azure_activity_log` and `azure_recent_changes` use the current subscription when no scope is given. Stored locally; turn off with `BETTERAZUREMCP_REMEMBER_CONTEXT=false`.
 - `BETTERAZUREMCP_SUBSCRIPTIONS` limits the server to chosen subscriptions, enforced in the HTTP pipeline.
 - Memory watchdog: the server stops itself if it exceeds `BETTERAZUREMCP_MAX_MEMORY_MB` (default 1024).
 - Prompt-injection hardening: results that carry free text are marked as untrusted, and text that reads like instructions to an AI assistant is flagged with a warning.

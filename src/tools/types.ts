@@ -7,10 +7,13 @@ import type { KubernetesClient } from '../azure/kubernetes.js';
 import type { LogAnalyticsClient } from '../azure/logAnalytics.js';
 import type { ApiVersionResolver } from '../azure/apiVersions.js';
 import type { ToolOutput } from '../format/result.js';
+import type { ContextStore } from '../state/contextStore.js';
 
 /** Everything a tool may use. Tools only reach the network through `http` and `arm`. */
 export interface AzureServices {
   config: Config;
+  /** The most recently used subscription and directory. */
+  context: ContextStore;
   credentials: CredentialManager;
   /** Guarded HTTP for non-ARM endpoints (Log Analytics, Kudu, Kubernetes). */
   http: AzureHttp;

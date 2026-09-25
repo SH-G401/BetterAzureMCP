@@ -20,6 +20,7 @@ Ask _"why is orders-api returning 500s since this morning?"_ and the assistant c
 - [Client setup](#client-setup)
 - [Tools](#tools)
 - [Permissions](#permissions)
+- [Current subscription](#current-subscription)
 - [Configuration](#configuration)
 - [Privacy and safety](#privacy-and-safety)
 - [Troubleshooting](#troubleshooting)
@@ -84,12 +85,12 @@ Visual Studio, Copilot CLI, Claude Desktop and others are covered in [docs/clien
 
 **Finding things**
 
-| Tool                         | What it does                                                                             |
-| ---------------------------- | ---------------------------------------------------------------------------------------- |
-| `azure_context`              | Who you are signed in as, the tenant, and the subscriptions you can read.                |
-| `azure_find_resources`       | Finds resources by name, type, resource group, location or tag across all subscriptions. |
-| `azure_resource_graph_query` | KQL against Azure Resource Graph, for inventory questions across subscriptions.          |
-| `azure_get_resource`         | The full definition of any resource by ID.                                               |
+| Tool                         | What it does                                                                                                                  |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `azure_context`              | Who you are signed in as, the directory, your subscriptions and the current subscription. Switches subscription or directory. |
+| `azure_find_resources`       | Finds resources by name, type, resource group, location or tag across all subscriptions.                                      |
+| `azure_resource_graph_query` | KQL against Azure Resource Graph, for inventory questions across subscriptions.                                               |
+| `azure_get_resource`         | The full definition of any resource by ID.                                                                                    |
 
 **What is wrong with this resource?**
 
@@ -144,20 +145,33 @@ The server can only see what your account can see. Most tools work with the **Re
 
 When a role is missing, the tool says which one and suggests an alternative that works with Reader.
 
+## Current subscription
+
+The server remembers the subscription and directory (Entra tenant) you worked in most recently, so the assistant does not have to ask where to look every time.
+
+- **It follows your work.** Whenever a tool reads a resource in a subscription, that subscription becomes the current one. Tools that need a scope, such as the activity log and recent changes, use it when you don't name another.
+- **The assistant knows it.** The current subscription is part of the server's instructions at the start of every session, and `azure_context` shows it.
+- **Switching is one sentence.** _"Switch to the Staging subscription"_ or _"look in the fabrikam.onmicrosoft.com directory"_ makes the assistant call `azure_context` with the new choice, which is then remembered.
+- **It survives restarts and stays local.** The choice is stored in a small file in your user profile: `~/.local/state/betterazuremcp/context.json` on Linux, `~/Library/Application Support/betterazuremcp/` on macOS, `%APPDATA%\betterazuremcp\` on Windows. It holds only IDs and display names. Delete it to forget, or set `BETTERAZUREMCP_REMEMBER_CONTEXT=false`.
+
+If the remembered directory stops working for your login, for example after you sign in with another account, the server falls back to your default directory and forgets the old choice. `BETTERAZUREMCP_TENANT_ID` and `BETTERAZUREMCP_SUBSCRIPTIONS` always take precedence.
+
 ## Configuration
 
 Configuration is optional and done through environment variables. Most clients let you set them in the server entry (`"env": { ... }`).
 
-| Variable                         | Default              | Description                                                                                                                                                                                 |
-| -------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BETTERAZUREMCP_TENANT_ID`       | tenant of your login | Tenant to sign in to. Set this if you have access to several tenants.                                                                                                                       |
-| `BETTERAZUREMCP_CREDENTIAL`      | `auto`               | `auto` tries environment variables, Azure CLI, Azure Developer CLI and Azure PowerShell, in that order. Or pin one: `azurecli`, `azd`, `azurepowershell`, `environment`, `managedidentity`. |
-| `BETTERAZUREMCP_TIMEOUT_SECONDS` | `60`                 | Deadline for a single tool call (5–600).                                                                                                                                                    |
-| `BETTERAZUREMCP_MAX_RESPONSE_KB` | `12`                 | Size limit for a single tool result (2–256).                                                                                                                                                |
-| `BETTERAZUREMCP_SUBSCRIPTIONS`   | all accessible       | Comma-separated subscription IDs. The server then reads only from these subscriptions, enforced for every request.                                                                          |
-| `BETTERAZUREMCP_MAX_MEMORY_MB`   | `1024`               | The server stops itself if it ever uses more memory than this. The client restarts it on the next call.                                                                                     |
-| `BETTERAZUREMCP_SHOW_SECRETS`    | `false`              | Set to `true` to stop masking secret values. Not recommended.                                                                                                                               |
-| `BETTERAZUREMCP_LOG_LEVEL`       | `info`               | `error`, `warn`, `info` or `debug`. Logs go to stderr, which clients show in their output panel.                                                                                            |
+| Variable                          | Default                  | Description                                                                                                                                                                                 |
+| --------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BETTERAZUREMCP_TENANT_ID`        | tenant of your login     | Tenant to sign in to. Set this if you have access to several tenants.                                                                                                                       |
+| `BETTERAZUREMCP_CREDENTIAL`       | `auto`                   | `auto` tries environment variables, Azure CLI, Azure Developer CLI and Azure PowerShell, in that order. Or pin one: `azurecli`, `azd`, `azurepowershell`, `environment`, `managedidentity`. |
+| `BETTERAZUREMCP_TIMEOUT_SECONDS`  | `60`                     | Deadline for a single tool call (5–600).                                                                                                                                                    |
+| `BETTERAZUREMCP_MAX_RESPONSE_KB`  | `12`                     | Size limit for a single tool result (2–256).                                                                                                                                                |
+| `BETTERAZUREMCP_SUBSCRIPTIONS`    | all accessible           | Comma-separated subscription IDs. The server then reads only from these subscriptions, enforced for every request.                                                                          |
+| `BETTERAZUREMCP_MAX_MEMORY_MB`    | `1024`                   | The server stops itself if it ever uses more memory than this. The client restarts it on the next call.                                                                                     |
+| `BETTERAZUREMCP_REMEMBER_CONTEXT` | `true`                   | Remember the subscription and directory you worked in last. Set to `false` to turn it off.                                                                                                  |
+| `BETTERAZUREMCP_STATE_DIR`        | per-user app data folder | Where the remembered context is stored.                                                                                                                                                     |
+| `BETTERAZUREMCP_SHOW_SECRETS`     | `false`                  | Set to `true` to stop masking secret values. Not recommended.                                                                                                                               |
+| `BETTERAZUREMCP_LOG_LEVEL`        | `info`                   | `error`, `warn`, `info` or `debug`. Logs go to stderr, which clients show in their output panel.                                                                                            |
 
 Behind a corporate proxy, set `HTTPS_PROXY` (and `NO_PROXY` if needed).
 

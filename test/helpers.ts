@@ -10,6 +10,7 @@ import type { NamedCredential } from '../src/auth/credentials.js';
 import { silentLogger } from '../src/logger.js';
 import { runTool } from '../src/server.js';
 import { createAzureServices } from '../src/services.js';
+import { ContextStore } from '../src/state/contextStore.js';
 import type { AzureServices, ToolDefinition } from '../src/tools/types.js';
 
 /** The public tool catalog, in order. Renaming a tool is a breaking change. */
@@ -85,6 +86,8 @@ export const testConfig: Config = {
   showSecrets: false,
   subscriptions: undefined,
   maxMemoryBytes: 1024 * 1024 * 1024,
+  rememberContext: false,
+  stateDir: undefined,
   logLevel: 'error',
 };
 
@@ -145,11 +148,19 @@ export function fakeCredential(
   return { source, label: `fake ${source}`, credential: { getToken } };
 }
 
-export function servicesWith(handler: Handler, config: Partial<Config> = {}) {
+export function servicesWith(
+  handler: Handler,
+  config: Partial<Config> = {},
+  overrides: { context?: ContextStore; credentials?: readonly NamedCredential[] } = {},
+) {
   const http = new FakeHttpClient(handler);
   const services = createAzureServices({ ...testConfig, ...config }, silentLogger, {
-    credentials: [fakeCredential('azurecli', () => Promise.resolve(fakeToken()))],
+    credentials: overrides.credentials ?? [
+      fakeCredential('azurecli', () => Promise.resolve(fakeToken())),
+    ],
     httpClient: http,
+    // In memory only: tests never touch the developer's remembered context.
+    context: overrides.context ?? new ContextStore(undefined, silentLogger),
   });
   return { services, http };
 }
