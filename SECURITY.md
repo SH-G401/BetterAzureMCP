@@ -52,7 +52,7 @@ Your Azure role assignments still apply: the server can never see more than the 
 
 Tool results carry text that anyone may have written: log lines, exception messages, Kubernetes events, resource tags, commit messages. An attacker who can write such text can try to steer the assistant, as in the published attack on the official Azure MCP Server, where planted instructions made an agent read Key Vault secrets and leak them. BetterAzureMCP limits what such an attack can achieve:
 
-- **Nothing to steal.** No tool returns secret values: Key Vault secrets, keys, connection strings and app settings are never requested, and `listKeys`-style calls are blocked in the HTTP pipeline. Secret-looking values that appear anyway are masked.
+- **No secrets requested.** Key Vault secrets, keys, connection strings and app settings are never requested, and `listKeys`-style calls are blocked in the HTTP pipeline. Logs and telemetry can still contain secrets your application wrote; values that look like secrets are masked, on a best-effort basis (see below).
 - **Nothing to change.** Every write is blocked in the HTTP pipeline, whatever the model asks for.
 - **No way out.** The server can only reach the hosts on the allowlist. The two hosts that vary per resource (App Service Kudu sites and AKS API servers) are never taken from model input: they are read from the resource's definition in Azure Resource Manager, which only succeeds for resources the signed-in account can already read. A tool call cannot make the server contact an attacker's host.
 - **Marked as data.** Results that contain free text are prefixed with a note that the content is untrusted, and the server instructions tell the model never to follow instructions found in results.
@@ -71,6 +71,6 @@ Tool results are returned to your MCP client, and the client passes them to its 
 
 Masking is best-effort pattern matching, not a guarantee. `BETTERAZUREMCP_SHOW_SECRETS=true` disables it.
 
-## Changes to these guarantees
+## Changes to these rules
 
 Any change that adds a host to the allowlist, permits a new path or `POST` endpoint, or weakens masking must update this document in the same pull request. Tests in [`test/unit/endpoints.test.ts`](test/unit/endpoints.test.ts) pin the hosts and the path rules so that such a change cannot slip in unnoticed.

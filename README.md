@@ -11,7 +11,7 @@ Ask _"why is orders-api returning 500s since this morning?"_ and the assistant c
 
 - **Stable.** Every tool call has a hard deadline. Sign-in never waits on a hidden browser window. Nothing but protocol messages is written to stdout. No auto-updates and no runtime downloads.
 - **Private.** The server only talks to Azure's own API endpoints, enforced by an allowlist in code. No telemetry, no analytics, no third parties.
-- **Read-only.** Write operations are blocked at the HTTP layer, not just left out of the tool list. Secret values are masked before they leave the server.
+- **Read-only.** Write operations are blocked at the HTTP layer, not just left out of the tool list. Values that look like secrets are masked before they leave the server.
 - **Focused.** 20 tools that cover the debugging path, instead of hundreds of per-service wrappers competing for the model's attention.
 
 ## Contents
@@ -179,11 +179,11 @@ Behind a corporate proxy, set `HTTPS_PROXY` (and `NO_PROXY` if needed).
 
 - **Where data goes.** Requests go only to Azure Resource Manager (`management.azure.com`), the Log Analytics query API (`api.loganalytics.io`), your App Service apps' Kudu sites (`*.scm.azurewebsites.net`) and your AKS API servers (`*.azmk8s.io`). Any other host is refused before a request is made.
 - **What is sent.** Only the Azure API calls needed to answer a tool call. There is no telemetry, crash reporting or update check.
-- **What cannot happen.** `PUT`, `PATCH` and `DELETE` are blocked, and so is every `POST` that is not a known read. Kudu access is limited to log files, and Kubernetes access to pod, event, deployment and node status and pod logs. Secrets, config maps, `exec` and calls such as `listKeys` are never reachable.
-- **Prompt injection.** Logs, messages and tags can contain text written by anyone. Results that carry such text are marked as untrusted, and text that reads like instructions to an AI assistant is flagged with a warning. The server has nothing to steal and no way to send data out: it never reads secret values, cannot write, and can only reach Azure endpoints of resources you can already read.
-- **What the AI sees.** Your MCP client passes tool results to its language model. Values that look like secrets (passwords, keys, connection strings, SAS tokens) are masked first, and app setting values are never read.
+- **What cannot happen.** `PUT`, `PATCH` and `DELETE` are blocked, and so is every `POST` that is not a known read. Kudu access is limited to log files, and Kubernetes access to pod, event, deployment and node status and pod logs. Secrets, config maps, `exec` and calls such as `listKeys` are blocked by the same rules.
+- **Prompt injection.** Logs, messages and tags can contain text written by anyone. Results that carry such text are marked as untrusted, and text that reads like instructions to an AI assistant is flagged with a warning. The server limits what an injected instruction could achieve: it does not request secret values, cannot write, and can only reach Azure endpoints of resources you can already read.
+- **What the AI sees.** Your MCP client passes tool results to its language model. Values that look like secrets (passwords, keys, connection strings, SAS tokens) are masked first, and app setting values are not requested. Masking is pattern-based and cannot catch everything: logs and telemetry contain whatever your application wrote, so a secret your app logged in an unusual format can reach the model. Use an MCP client and model you trust with your logs.
 
-The full model is in [SECURITY.md](SECURITY.md).
+The full model is in [SECURITY.md](SECURITY.md). These are design properties backed by tests, not a warranty; see the [license](LICENSE).
 
 ## Troubleshooting
 
@@ -215,4 +215,6 @@ Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). The npm package bundles open-source dependencies into a single file; their licenses are in `dist/THIRD_PARTY_NOTICES.txt`.
+
+BetterAzureMCP is an independent project. It is not affiliated with, endorsed by or supported by Microsoft. Microsoft and Azure are trademarks of the Microsoft group of companies.

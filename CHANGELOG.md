@@ -22,6 +22,7 @@ First release on npm. Tool names and parameters are now covered by semantic vers
 - HTTP pipeline with an egress allowlist (Azure Resource Manager, Log Analytics, App Service Kudu sites, AKS API servers), per-host read-only path rules, retries with backoff and proxy support.
 - Per-call deadlines, secret masking, size-capped results, and role-specific guidance when access is denied.
 - `betterazuremcp doctor` to check sign-in, subscriptions and connectivity.
+- `THIRD_PARTY_NOTICES.txt` with the license of every open-source package bundled into the server, shipped in the npm package and attached to GitHub releases.
 - Development: tool-selection eval (`npm run eval:tools`), soak test (`npm run soak`), live check against your own tenant (`npm run live-check`), CodeQL and `npm audit` in CI, and a release workflow that publishes to npm with provenance.
 
 [Unreleased]: https://github.com/SH-G401/BetterAzureMCP/compare/v1.0.0...HEAD
