@@ -176,7 +176,7 @@ describe('azure_context', () => {
 
     const text = textOf(await runTool(contextTool, {}, services, silentLogger, never));
     expect(text).toMatch(
-      /^Signed in as dev@contoso\.com via fake azurecli, tenant tenant-1\. 2 subscriptions accessible \(1 enabled\)\./,
+      /^Signed in as dev@contoso\.com via fake azurecli, directory tenant-1\. 2 subscriptions accessible \(1 enabled\)\./,
     );
   });
 });

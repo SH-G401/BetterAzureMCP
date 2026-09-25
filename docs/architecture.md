@@ -27,3 +27,9 @@
 ## Why a single bundle
 
 `npm run build` produces one ESM file with every dependency inlined. Installing it pulls nothing else from the registry, there are no native modules or platform packages, and startup takes about a quarter of a second.
+
+## Current subscription
+
+`state/contextStore.ts` keeps the most recently used subscription and directory in a small JSON file in the user's application data folder. After every successful tool call, `recordUsage` (in `state/currentContext.ts`) makes the subscription named in the call's input the current one, together with the directory of the token that was used. The server instructions (`buildInstructions` in `server.ts`) tell the model about it at the start of each session, and tools without an explicit scope fall back to it.
+
+On startup, `CredentialManager` requests tokens for the remembered directory. If the login works for the default directory but not for the remembered one, it falls back to the default and the store forgets the old choice. If no login works at all, the memory is kept.

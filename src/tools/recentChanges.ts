@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { parseResourceId } from '../azure/resourceId.js';
+import { scopeOrCurrent } from '../state/currentContext.js';
 import { kqlString, queryResourceGraph } from '../azure/resourceGraph.js';
 import { hoursSchema, limitSchema, plural, resourceIdSchema } from './common.js';
 import { defineTool } from './types.js';
@@ -13,13 +14,13 @@ export const recentChangesTool = defineTool({
   ].join(' '),
   inputSchema: z.object({
     scope: resourceIdSchema(
-      'Resource ID, resource group ID (/subscriptions/<id>/resourceGroups/<name>) or subscription ID path (/subscriptions/<id>).',
-    ),
+      'Resource ID, resource group ID (/subscriptions/<id>/resourceGroups/<name>) or subscription ID path (/subscriptions/<id>). Defaults to the current subscription.',
+    ).optional(),
     hours: hoursSchema(24, 336),
     limit: limitSchema(50, 500, 'changes'),
   }),
   async run(input, ctx) {
-    const scope = parseResourceId(input.scope);
+    const scope = parseResourceId(scopeOrCurrent(ctx, input.scope));
     const query = [
       'resourcechanges',
       '| extend time = todatetime(properties.changeAttributes.timestamp), resourceId = tostring(properties.targetResourceId)',

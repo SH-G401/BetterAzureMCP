@@ -33,7 +33,12 @@ for (const [key, value] of Object.entries(process.env)) {
 const transport = new StdioClientTransport({
   command: process.execPath,
   args: ['--max-old-space-size=64', process.env.SOAK_SERVER ?? 'dist/betterazuremcp.mjs'],
-  env: { ...env, BETTERAZUREMCP_CREDENTIAL: 'environment', BETTERAZUREMCP_LOG_LEVEL: 'error' },
+  env: {
+    ...env,
+    BETTERAZUREMCP_CREDENTIAL: 'environment',
+    BETTERAZUREMCP_LOG_LEVEL: 'error',
+    BETTERAZUREMCP_REMEMBER_CONTEXT: 'false',
+  },
   stderr: 'ignore',
 });
 const client = new Client({ name: 'soak', version: '1.0.0' });

@@ -14,7 +14,12 @@ await client.connect(
   new StdioClientTransport({
     command: process.execPath,
     args: ['dist/betterazuremcp.mjs'],
-    env: { ...process.env, BETTERAZUREMCP_LOG_LEVEL: 'error' },
+    // The checks must not change the subscription you work in.
+    env: {
+      ...process.env,
+      BETTERAZUREMCP_LOG_LEVEL: 'error',
+      BETTERAZUREMCP_REMEMBER_CONTEXT: 'false',
+    },
     stderr: 'ignore',
   }),
 );

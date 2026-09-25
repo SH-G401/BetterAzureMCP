@@ -25,6 +25,7 @@ betterazuremcp ──── HTTPS ───▶ management.azure.com       Azure 
 - It sends no telemetry, crash reports, usage statistics or update checks, and has no code to do so. The `User-Agent` header is `betterazuremcp/<version>`, without OS or runtime details.
 - Access tokens are obtained through the credential you choose, held in memory, and never written to disk or logs. Tokens are requested only for the scope of the host being called. Token acquisition happens in that credential's own process or library: for example, the Azure CLI talks to `login.microsoftonline.com`, and managed identity uses the local instance metadata endpoint.
 - Logs go to stderr only, and contain no tokens or tool results.
+- The only file the server writes is the remembered context (see [Current subscription](README.md#current-subscription)): the IDs and display names of the subscription and directory you used last, readable only by your user account. It holds no tokens and no resource data, and is ignored if it is malformed. `BETTERAZUREMCP_REMEMBER_CONTEXT=false` turns it off.
 
 The Azure CLI has its own telemetry, independent of this project. To turn it off, run `az config set core.collect_telemetry=false`.
 

@@ -31,7 +31,11 @@ await mcp.connect(
   new StdioClientTransport({
     command: process.execPath,
     args: ['dist/betterazuremcp.mjs'],
-    env: { ...process.env, BETTERAZUREMCP_LOG_LEVEL: 'error' },
+    env: {
+      ...process.env,
+      BETTERAZUREMCP_LOG_LEVEL: 'error',
+      BETTERAZUREMCP_REMEMBER_CONTEXT: 'false',
+    },
     stderr: 'ignore',
   }),
 );

@@ -18,6 +18,8 @@ Configuration (environment variables):
   BETTERAZUREMCP_MAX_RESPONSE_KB   Size limit per tool result (default 12)
   BETTERAZUREMCP_SUBSCRIPTIONS     Comma-separated subscription IDs; the server reads only these
   BETTERAZUREMCP_MAX_MEMORY_MB     Stop the server if it ever uses more memory (default 1024)
+  BETTERAZUREMCP_REMEMBER_CONTEXT  Remember the last-used subscription and directory (default true)
+  BETTERAZUREMCP_STATE_DIR         Where to keep that memory (default: per-user app data folder)
   BETTERAZUREMCP_SHOW_SECRETS      Set to true to disable masking of secret values
   BETTERAZUREMCP_LOG_LEVEL         error | warn | info | debug (default info)
 

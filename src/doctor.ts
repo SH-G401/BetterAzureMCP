@@ -3,6 +3,7 @@ import { readTokenIdentity } from './auth/tokenClaims.js';
 import { describeError } from './azure/errors.js';
 import { queryResourceGraph } from './azure/resourceGraph.js';
 import { ALLOWED_ENDPOINTS, ARM_SCOPE } from './http/endpoints.js';
+import { currentContext, describeContext } from './state/currentContext.js';
 import { VERSION } from './version.js';
 
 interface Check {
@@ -119,6 +120,13 @@ export async function runDoctor(
   write(`  max response     ${config.maxResponseBytes / 1024} KB\n`);
   write(`  secrets          ${config.showSecrets ? 'shown' : 'masked'}\n`);
   write(`  subscriptions    ${config.subscriptions?.join(', ') ?? '(all accessible)'}\n`);
+  const remembered = currentContext(services);
+  write(
+    `  current context  ${!config.rememberContext ? 'not remembered (BETTERAZUREMCP_REMEMBER_CONTEXT=false)' : remembered ? describeContext(remembered) : '(none yet)'}\n`,
+  );
+  if (config.rememberContext && services.context.filePath) {
+    write(`  context file     ${services.context.filePath}\n`);
+  }
   write(`  allowed hosts    ${ALLOWED_ENDPOINTS.map((e) => e.hosts).join(', ')}\n`);
   write(`\n${failures === 0 ? 'All checks passed.' : `${failures} check(s) failed.`}\n`);
   return failures === 0 ? 0 : 1;

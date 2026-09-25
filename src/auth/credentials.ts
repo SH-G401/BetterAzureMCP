@@ -10,6 +10,7 @@ import type { Config, CredentialSource } from '../config.js';
 import type { TokenProvider } from '../http/policies.js';
 import type { Logger } from '../logger.js';
 import { ARM_SCOPE } from '../http/endpoints.js';
+import { readTokenIdentity } from './tokenClaims.js';
 
 /**
  * Credential handling is deliberately non-interactive. The official Azure MCP server can
@@ -44,8 +45,12 @@ const PROCESS_TIMEOUT_MS = 20_000;
 /** Tokens are refreshed this long before they expire. */
 const EXPIRY_MARGIN_MS = 5 * 60_000;
 
-export function createCredentialChain(config: Config): NamedCredential[] {
-  const tenantId = config.tenantId;
+export type CredentialChainFactory = (tenantId: string | undefined) => readonly NamedCredential[];
+
+export function createCredentialChain(
+  config: Config,
+  tenantId: string | undefined = config.tenantId,
+): NamedCredential[] {
   const all: Record<NamedCredential['source'], () => NamedCredential> = {
     environment: () => ({
       source: 'environment',
@@ -97,14 +102,54 @@ export class CredentialManager implements TokenProvider {
   private status: AuthStatus = { state: 'unknown' };
   private readonly cache = new Map<string, AccessToken>();
   private readonly pending = new Map<string, Promise<AccessToken>>();
+  private readonly factory: CredentialChainFactory;
+  private chain: readonly NamedCredential[];
+  private tenant: TenantChoice | undefined;
 
+  /**
+   * @param chain The credentials to try, or a factory that builds them for a tenant.
+   * @param tenant The directory to sign in to. A `remembered` tenant (from an earlier session)
+   *   is dropped in favour of the default login when no credential can use it.
+   * @param onRememberedTenantRejected Called when that happens.
+   */
   constructor(
-    private readonly chain: readonly NamedCredential[],
+    chain: readonly NamedCredential[] | CredentialChainFactory,
     private readonly logger: Logger,
-  ) {}
+    tenant?: TenantChoice,
+    private readonly onRememberedTenantRejected?: () => void,
+  ) {
+    this.factory = typeof chain === 'function' ? chain : () => chain;
+    this.tenant = tenant;
+    this.chain = this.factory(tenant?.id);
+  }
 
   getStatus(): AuthStatus {
     return this.status;
+  }
+
+  /** The directory tokens are requested for, when one was chosen explicitly or remembered. */
+  getTenantId(): string | undefined {
+    return this.tenant?.id;
+  }
+
+  /** The directory of the current Azure Resource Manager token, if one is cached. */
+  cachedTenantId(): string | undefined {
+    const token = this.cache.get(ARM_SCOPE);
+    return token === undefined ? undefined : readTokenIdentity(token.token).tenantId;
+  }
+
+  /** Switches to another directory (or back to the default login with `undefined`). */
+  useTenant(tenantId: string | undefined): void {
+    this.tenant = tenantId === undefined ? undefined : { id: tenantId, remembered: false };
+    this.reset();
+  }
+
+  private reset(): void {
+    this.chain = this.factory(this.tenant?.id);
+    this.selected = undefined;
+    this.cache.clear();
+    this.pending.clear();
+    this.status = { state: 'unknown' };
   }
 
   async getToken(scope: string, signal?: AbortSignal): Promise<string> {
@@ -161,10 +206,37 @@ export class CredentialManager implements TokenProvider {
       }
     }
 
+    if (this.tenant?.remembered) {
+      // The directory remembered from an earlier session may no longer fit this login (for
+      // example, a different account is signed in). Try the default directory, and forget the
+      // remembered one only if that works: when nothing works, the user is simply not signed
+      // in and the memory is kept.
+      const remembered = this.tenant;
+      this.tenant = undefined;
+      this.reset();
+      try {
+        const token = await this.acquire(scope);
+        this.logger.info(
+          `The remembered directory ${remembered.id} is not available for this login; using the default directory.`,
+        );
+        this.onRememberedTenantRejected?.();
+        return token;
+      } catch {
+        this.tenant = remembered;
+        this.reset();
+      }
+    }
+
     this.selected = undefined;
     this.status = { state: 'failed', attempts };
     throw new NotSignedInError(attempts);
   }
+}
+
+export interface TenantChoice {
+  id: string;
+  /** True when the tenant comes from an earlier session rather than from configuration. */
+  remembered: boolean;
 }
 
 function describeAttempts(attempts: readonly CredentialAttempt[]): string {

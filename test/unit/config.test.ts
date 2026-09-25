@@ -11,6 +11,8 @@ describe('loadConfig', () => {
       showSecrets: false,
       subscriptions: undefined,
       maxMemoryBytes: 1024 * 1024 * 1024,
+      rememberContext: true,
+      stateDir: undefined,
       logLevel: 'info',
     });
   });
