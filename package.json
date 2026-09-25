@@ -24,7 +24,7 @@
   },
   "files": [
     "dist/betterazuremcp.mjs",
-    "dist/betterazuremcp.mjs.LEGAL.txt",
+    "dist/THIRD_PARTY_NOTICES.txt",
     "README.md",
     "LICENSE",
     "SECURITY.md"

@@ -15,13 +15,13 @@ _Follows [RESEARCH.md](RESEARCH.md). Decisions made 2026-09-25._
 
 | Topic          | Decision                                                                                                                                                                                          |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Priorities     | 1. Ease of use, 2. Stability, 3. Guaranteed privacy                                                                                                                                               |
+| Priorities     | 1. Ease of use, 2. Stability, 3. Privacy by design                                                                                                                                                |
 | Target clients | GitHub Copilot Desktop app, VS Code + Copilot, Visual Studio, Copilot CLI (all via **local stdio**)                                                                                               |
 | Scope          | **Read-only**. No create, update, or delete. Ever, in v1                                                                                                                                          |
 | Focus          | Debugging read-outs for Azure applications: telemetry (App Insights, Log Analytics, metrics, activity log, resource health, diagnostic settings), App Service / Functions, Container Apps, AKS, … |
 | Language       | **TypeScript** (Node.js). C++ was evaluated and rejected (see §6)                                                                                                                                 |
 
-## 1. Privacy guarantee: what it means precisely
+## 1. Privacy: what it means precisely
 
 **Promise:** the server talks **only** to Azure's own endpoints, on your behalf, with your credentials. It sends nothing to us, to Microsoft telemetry, or to any third party.
 
@@ -48,7 +48,7 @@ How we enforce it (not just promise it):
 
 Also note that the Azure CLI has its own telemetry, separate from us. To turn it off: `az config set core.collect_telemetry=false`.
 
-## 2. Read-only guarantee
+## 2. Read-only by design
 
 Some Azure _read_ APIs use POST (for example Resource Graph queries, log queries, and metrics batch). So "GET only" isn't enough.
 
