@@ -2,15 +2,22 @@ import type { z } from 'zod';
 import type { Config } from '../config.js';
 import type { CredentialManager } from '../auth/credentials.js';
 import type { ArmClient } from '../azure/armClient.js';
+import type { AzureHttp } from '../azure/http.js';
+import type { KubernetesClient } from '../azure/kubernetes.js';
+import type { LogAnalyticsClient } from '../azure/logAnalytics.js';
 import type { ApiVersionResolver } from '../azure/apiVersions.js';
 import type { ToolOutput } from '../format/result.js';
 
-/** Everything a tool may use. Tools never talk to the network except through `arm`. */
+/** Everything a tool may use. Tools only reach the network through `http` and `arm`. */
 export interface AzureServices {
   config: Config;
   credentials: CredentialManager;
+  /** Guarded HTTP for non-ARM endpoints (Log Analytics, Kudu, Kubernetes). */
+  http: AzureHttp;
   arm: ArmClient;
   apiVersions: ApiVersionResolver;
+  logs: LogAnalyticsClient;
+  kubernetes: KubernetesClient;
 }
 
 export interface ToolContext extends AzureServices {

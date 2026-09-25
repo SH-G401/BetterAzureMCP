@@ -1,5 +1,5 @@
 import type { PipelinePolicy } from '@azure/core-rest-pipeline';
-import { findAllowedEndpoint, READ_ONLY_POST_PATHS } from './endpoints.js';
+import { findAllowedEndpoint, isReadOnlyRequest } from './endpoints.js';
 
 export class PolicyViolationError extends Error {
   override name = 'PolicyViolationError';
@@ -19,28 +19,20 @@ export const egressPolicy: PipelinePolicy = {
   },
 };
 
-/** Refuses anything that could change state in Azure. */
+/** Refuses anything that could change state in Azure, and reads outside the permitted paths. */
 export const readOnlyPolicy: PipelinePolicy = {
   name: 'betterazuremcp-read-only',
   sendRequest(request, next) {
     if (!isReadOnlyRequest(request.method, new URL(request.url))) {
       return Promise.reject(
         new PolicyViolationError(
-          `Blocked ${request.method} ${new URL(request.url).pathname}: this server is read-only.`,
+          `Blocked ${request.method} ${new URL(request.url).pathname}: this server is read-only and only reads permitted paths.`,
         ),
       );
     }
     return next(request);
   },
 };
-
-export function isReadOnlyRequest(method: string, url: URL): boolean {
-  const verb = method.toUpperCase();
-  if (verb === 'GET' || verb === 'HEAD') return true;
-  if (verb !== 'POST') return false;
-  const path = url.pathname.toLowerCase().replace(/\/+$/, '');
-  return READ_ONLY_POST_PATHS.some((pattern) => pattern.test(path));
-}
 
 export interface TokenProvider {
   getToken(scope: string, signal?: AbortSignal): Promise<string>;

@@ -2,7 +2,14 @@
 
 _Follows [RESEARCH.md](RESEARCH.md). Decisions made 2026-09-25._
 
-> **Status:** M1 is implemented in v0.1.0. The response cap ended up at 12 KB by default (configurable); see the [README](../README.md) for current behaviour.
+> **Status:** all milestones are implemented as of v1.0.0. Differences from this plan:
+>
+> - `azure_appinsights_query` was folded into `azure_logs_query`, which accepts an Application Insights resource as its scope. `azure_containerapp_logs` became a separate tool, and `azure_appservice_diagnostics` became `azure_diagnostics`, which also covers Container Apps. The total is still 20 tools.
+> - Log queries go to `api.loganalytics.io` only. `api.applicationinsights.io` and `*.metrics.monitor.azure.com` are not needed: Application Insights data is read from its workspace, and metrics through Azure Resource Manager.
+> - AKS workload access is on by default for clusters with Entra ID integration, where the user kubeconfig holds no credentials, and never attempted for other clusters.
+> - The response cap is 12 KB by default (configurable).
+>
+> See the [README](../README.md) for current behaviour.
 
 ## 0. Decisions
 

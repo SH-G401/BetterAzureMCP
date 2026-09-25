@@ -105,7 +105,7 @@ export async function runDoctor(
   write(`  timeout          ${config.timeoutMs / 1000} s\n`);
   write(`  max response     ${config.maxResponseBytes / 1024} KB\n`);
   write(`  secrets          ${config.showSecrets ? 'shown' : 'masked'}\n`);
-  write(`  allowed hosts    ${ALLOWED_ENDPOINTS.map((e) => e.host).join(', ')}\n`);
+  write(`  allowed hosts    ${ALLOWED_ENDPOINTS.map((e) => e.hosts).join(', ')}\n`);
   write(`\n${failures === 0 ? 'All checks passed.' : `${failures} check(s) failed.`}\n`);
   return failures === 0 ? 0 : 1;
 }

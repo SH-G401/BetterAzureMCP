@@ -8,10 +8,15 @@ import { TOOLS } from './tools/index.js';
 import type { AzureServices, ToolDefinition } from './tools/types.js';
 import { SERVER_NAME, VERSION } from './version.js';
 
-const INSTRUCTIONS = `Read-only access to the user's Azure environment for debugging applications.
-Nothing can be created, changed or deleted through this server.
-Start with azure_find_resources to get resource IDs. Use azure_context if you need subscription IDs or hit a sign-in or permission error.
-Tool errors explain what to do next; relay those instructions to the user when they require action (for example "az login").`;
+const INSTRUCTIONS = `Read-only access to the user's Azure environment, for debugging applications. Nothing can be created, changed or deleted through this server.
+
+Typical flow when something is broken:
+1. azure_find_resources to get the resource ID.
+2. azure_resource_health, azure_recent_changes and azure_activity_log to rule out platform issues, configuration changes and failed deployments.
+3. azure_telemetry_locations to find where logs go, then azure_appinsights_failures, azure_appinsights_trace or azure_logs_query.
+4. Platform tools for App Service (azure_appservice_*), Container Apps (azure_containerapp_*), AKS (azure_aks_*) and azure_diagnostics for Azure's built-in detectors. azure_metrics for CPU, memory, errors and latency.
+
+Use azure_context for subscription IDs or when a sign-in or permission error occurs. Tool errors explain what to do next; pass those instructions on to the user when they require action (for example "az login" or a missing role).`;
 
 export function createMcpServer(services: AzureServices, logger: Logger): McpServer {
   const server = new McpServer(

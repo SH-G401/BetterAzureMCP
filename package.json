@@ -1,6 +1,6 @@
 {
   "name": "betterazuremcp",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A stable, private, read-only Azure MCP server for debugging Azure applications from GitHub Copilot, VS Code and other MCP clients.",
   "keywords": [
     "mcp",
