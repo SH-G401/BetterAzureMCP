@@ -1,0 +1,42 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `betterazuremcp doctor`
+      description: Remove anything you consider sensitive, such as tenant or subscription IDs.
+      render: text
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server log
+      description: From your client's MCP output panel, ideally with BETTERAZUREMCP_LOG_LEVEL=debug.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: BetterAzureMCP version
+      placeholder: betterazuremcp --version
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: MCP client and version
+      placeholder: VS Code 1.105 with GitHub Copilot, GitHub Copilot Desktop, ...
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system and Node.js version
+      placeholder: Windows 11, Node.js 22.20

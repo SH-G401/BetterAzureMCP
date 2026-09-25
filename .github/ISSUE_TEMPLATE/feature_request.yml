@@ -1,0 +1,23 @@
+name: Feature request
+description: Suggest a tool or an improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Debugging scenario
+      description: What were you trying to find out? Which Azure services were involved?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: The tool or change you have in mind, and the Azure API it would use if you know it.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: This only reads data. The project does not accept tools that change Azure resources.
+          required: true
