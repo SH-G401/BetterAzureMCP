@@ -1,0 +1,27 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      azure:
+        patterns: ['@azure/*']
+      mcp:
+        patterns: ['@modelcontextprotocol/*']
+      tooling:
+        patterns:
+          [
+            'eslint*',
+            '@eslint/*',
+            'typescript*',
+            'prettier',
+            'vitest',
+            'esbuild',
+            '@types/*',
+            'globals',
+          ]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

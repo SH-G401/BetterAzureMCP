@@ -2,15 +2,17 @@
 
 _Follows [RESEARCH.md](RESEARCH.md). Decisions made 2026-09-25._
 
+> **Status:** M1 is implemented in v0.1.0. The response cap ended up at 12 KB by default (configurable); see the [README](../README.md) for current behaviour.
+
 ## 0. Decisions
 
-| Topic | Decision |
-|---|---|
-| Priorities | 1. Ease of use, 2. Stability, 3. Guaranteed privacy |
-| Target clients | GitHub Copilot Desktop app, VS Code + Copilot, Visual Studio, Copilot CLI (all via **local stdio**) |
-| Scope | **Read-only**. No create, update, or delete. Ever, in v1 |
-| Focus | Debugging read-outs for Azure applications: telemetry (App Insights, Log Analytics, metrics, activity log, resource health, diagnostic settings), App Service / Functions, Container Apps, AKS, … |
-| Language | **TypeScript** (Node.js). C++ was evaluated and rejected (see §6) |
+| Topic          | Decision                                                                                                                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Priorities     | 1. Ease of use, 2. Stability, 3. Guaranteed privacy                                                                                                                                               |
+| Target clients | GitHub Copilot Desktop app, VS Code + Copilot, Visual Studio, Copilot CLI (all via **local stdio**)                                                                                               |
+| Scope          | **Read-only**. No create, update, or delete. Ever, in v1                                                                                                                                          |
+| Focus          | Debugging read-outs for Azure applications: telemetry (App Insights, Log Analytics, metrics, activity log, resource health, diagnostic settings), App Service / Functions, Container Apps, AKS, … |
+| Language       | **TypeScript** (Node.js). C++ was evaluated and rejected (see §6)                                                                                                                                 |
 
 ## 1. Privacy guarantee: what it means precisely
 
@@ -28,19 +30,20 @@ How we enforce it (not just promise it):
    - sovereign-cloud equivalents, only when that cloud is selected
 
    A unit test asserts that the list never grows unnoticed.
+
 2. **No telemetry code at all.** No Application Insights SDK, no crash reporting, no update checks, no "phone home". The HTTP `User-Agent` is set to a minimal `betterazuremcp/<version>`.
 3. **Tokens stay local.** We don't store credentials ourselves. Tokens come from your existing `az` / `azd` / PowerShell login and are only held in memory.
 4. **Logs are local only.** They go to stderr, or to an opt-in file, with secrets redacted.
 5. **Secrets are masked by default.** App settings, connection strings, and anything that looks like a key or SAS token are shown as `***` (names stay visible). You can unmask per request only if you set `BETTERAZUREMCP_SHOW_SECRETS=1`.
 6. **Minimal supply chain.** The server is bundled into a single JS file with a pinned lockfile and npm provenance, and it has as few dependencies as possible.
 
-**What we can't control:** the AI client, Copilot, sends tool *results* to its language model. That's the client's data flow, not ours. Masking (point 5) and response-size limits reduce what ends up there. The docs will state this plainly.
+**What we can't control:** the AI client, Copilot, sends tool _results_ to its language model. That's the client's data flow, not ours. Masking (point 5) and response-size limits reduce what ends up there. The docs will state this plainly.
 
 Also note that the Azure CLI has its own telemetry, separate from us. To turn it off: `az config set core.collect_telemetry=false`.
 
 ## 2. Read-only guarantee
 
-Some Azure *read* APIs use POST (for example Resource Graph queries, log queries, and metrics batch). So "GET only" isn't enough.
+Some Azure _read_ APIs use POST (for example Resource Graph queries, log queries, and metrics batch). So "GET only" isn't enough.
 
 - **Method guard policy:** GET is allowed. **POST** is allowed only for an explicit list of read endpoints:
   - Resource Graph `resources`
@@ -49,22 +52,23 @@ Some Azure *read* APIs use POST (for example Resource Graph queries, log queries
   - AKS `listClusterUserCredential` (opt-in, see §4.4)
 
   PUT, PATCH, and DELETE are always refused.
+
 - **Excluded POSTs:** `listKeys`, `listSecrets`, `publishxml`, `runCommand`, and similar calls that return secrets or change state are never on the list.
 - On Kubernetes we only use the `get`/`list` verbs (plus `pods/log`). There's no `exec` and no `port-forward`.
 - A test enumerates every request the tools can make and fails on anything outside the policy.
 
 ## 3. Stability rules (from the RESEARCH.md root causes)
 
-| Root cause in the official server | Our rule |
-|---|---|
-| F1: auth blocks for up to 5 minutes on a browser prompt | Only **non-interactive** credentials: Azure CLI → azd → Azure PowerShell → environment/managed identity. We check them in the background at startup. If none works, the tool returns *immediately* with an error like `Not signed in: run "az login"` |
-| F2: calls can hang for an hour | Every tool gets an `AbortSignal.timeout` (default 60 s). Log queries also send a server-side timeout. Responses are paginated |
-| F3: stray output on stdout | Before anything else loads, `console.log`/`info`/`debug` are rerouted to stderr. A CI test starts the server and checks that stdout contains only valid JSON-RPC |
-| F4: runtime platform-binary download | Pure JS with no native modules. The bundled file runs on any Node ≥ 22 |
-| F5: auto-update and settings changes restart the server | No auto-update, pinned versions, and tool names treated as a semver public API |
-| F6: session loss | MCP TS SDK v2 `serveStdio`, which serves `2026-07-28` (stateless) and the 2025-era protocol. The server keeps no per-session state |
-| F7: tool overload and huge responses | About 20 tools total. Responses have a summary line followed by compact JSON, capped at about 8 KB, with a "narrow your query" hint when cut off |
-| F8: tenant confusion | `azure_context` shows the credential source, user, tenant, and default subscription. Tenant and subscription can be pinned via env/config |
+| Root cause in the official server                       | Our rule                                                                                                                                                                                                                                              |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F1: auth blocks for up to 5 minutes on a browser prompt | Only **non-interactive** credentials: Azure CLI → azd → Azure PowerShell → environment/managed identity. We check them in the background at startup. If none works, the tool returns _immediately_ with an error like `Not signed in: run "az login"` |
+| F2: calls can hang for an hour                          | Every tool gets an `AbortSignal.timeout` (default 60 s). Log queries also send a server-side timeout. Responses are paginated                                                                                                                         |
+| F3: stray output on stdout                              | Before anything else loads, `console.log`/`info`/`debug` are rerouted to stderr. A CI test starts the server and checks that stdout contains only valid JSON-RPC                                                                                      |
+| F4: runtime platform-binary download                    | Pure JS with no native modules. The bundled file runs on any Node ≥ 22                                                                                                                                                                                |
+| F5: auto-update and settings changes restart the server | No auto-update, pinned versions, and tool names treated as a semver public API                                                                                                                                                                        |
+| F6: session loss                                        | MCP TS SDK v2 `serveStdio`, which serves `2026-07-28` (stateless) and the 2025-era protocol. The server keeps no per-session state                                                                                                                    |
+| F7: tool overload and huge responses                    | About 20 tools total. Responses have a summary line followed by compact JSON, capped at about 8 KB, with a "narrow your query" hint when cut off                                                                                                      |
+| F8: tenant confusion                                    | `azure_context` shows the credential source, user, tenant, and default subscription. Tenant and subscription can be pinned via env/config                                                                                                             |
 
 A `betterazuremcp doctor` command checks the Node version, credential, tenant, subscriptions, and endpoint reachability, then prints the fixes.
 
@@ -73,44 +77,49 @@ A `betterazuremcp doctor` command checks the Node version, credential, tenant, s
 The descriptions will be written for the model, with an example in each. Tool names are drafts.
 
 ### 4.1 Orientation
-| Tool | Purpose | API |
-|---|---|---|
-| `azure_context` | Who am I, credential source, tenant, subscriptions, defaults | token claims + ARM |
-| `azure_find_resources` | Find resources by name, type, tag, or resource group across subscriptions | Resource Graph |
-| `azure_resource_graph_query` | Free-form KQL against Resource Graph (`resources`, `resourcechanges`, `healthresources`, …) | Resource Graph |
-| `azure_get_resource` | Full ARM JSON for any resource ID (api-version resolved automatically), secrets masked | ARM GET |
+
+| Tool                         | Purpose                                                                                     | API                |
+| ---------------------------- | ------------------------------------------------------------------------------------------- | ------------------ |
+| `azure_context`              | Who am I, credential source, tenant, subscriptions, defaults                                | token claims + ARM |
+| `azure_find_resources`       | Find resources by name, type, tag, or resource group across subscriptions                   | Resource Graph     |
+| `azure_resource_graph_query` | Free-form KQL against Resource Graph (`resources`, `resourcechanges`, `healthresources`, …) | Resource Graph     |
+| `azure_get_resource`         | Full ARM JSON for any resource ID (api-version resolved automatically), secrets masked      | ARM GET            |
 
 ### 4.2 "What's wrong?" for any resource
-| Tool | Purpose | API |
-|---|---|---|
-| `azure_resource_health` | Current and recent availability, plus platform/service-health events | Resource Health |
-| `azure_recent_changes` | What changed on this resource or RG in the last N hours (property diffs) | Resource Graph `resourcechanges` |
-| `azure_activity_log` | Who did what: failed operations, restarts, scale events, deployments | Activity Log |
+
+| Tool                        | Purpose                                                                                                                     | API                                   |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| `azure_resource_health`     | Current and recent availability, plus platform/service-health events                                                        | Resource Health                       |
+| `azure_recent_changes`      | What changed on this resource or RG in the last N hours (property diffs)                                                    | Resource Graph `resourcechanges`      |
+| `azure_activity_log`        | Who did what: failed operations, restarts, scale events, deployments                                                        | Activity Log                          |
 | `azure_telemetry_locations` | **Where do this resource's logs and metrics go?** Diagnostic settings → workspaces, linked App Insights, storage, Event Hub | ARM diagnosticSettings + app settings |
-| `azure_metrics` | List available metrics, or query them (CPU, memory, HTTP 5xx, latency, restarts, DLQ count, …) | Azure Monitor metrics |
+| `azure_metrics`             | List available metrics, or query them (CPU, memory, HTTP 5xx, latency, restarts, DLQ count, …)                              | Azure Monitor metrics                 |
 
 ### 4.3 Telemetry
-| Tool | Purpose | API |
-|---|---|---|
-| `azure_logs_query` | KQL against a Log Analytics workspace (with time range and row cap) | Log Analytics query |
-| `azure_appinsights_query` | KQL against Application Insights (both workspace-based and classic) | App Insights / LA query |
-| `azure_appinsights_failures` | One-call triage: top exceptions, failed requests, failing dependencies, slowest operations, with operation IDs | preset KQL |
-| `azure_appinsights_trace` | End-to-end transaction for one `operation_Id` (requests → dependencies → exceptions → traces) | preset KQL |
+
+| Tool                         | Purpose                                                                                                        | API                     |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `azure_logs_query`           | KQL against a Log Analytics workspace (with time range and row cap)                                            | Log Analytics query     |
+| `azure_appinsights_query`    | KQL against Application Insights (both workspace-based and classic)                                            | App Insights / LA query |
+| `azure_appinsights_failures` | One-call triage: top exceptions, failed requests, failing dependencies, slowest operations, with operation IDs | preset KQL              |
+| `azure_appinsights_trace`    | End-to-end transaction for one `operation_Id` (requests → dependencies → exceptions → traces)                  | preset KQL              |
 
 ### 4.4 Compute platforms
-| Tool | Purpose | API |
-|---|---|---|
-| `azure_appservice_overview` | State, plan, runtime, slots, health-check status, recent deployments, app settings (masked). Covers **Functions** too | ARM + Kudu |
-| `azure_appservice_diagnostics` | The "Diagnose and solve problems" detectors (availability, HTTP 5xx, crashes, restarts) | ARM `sites/detectors` |
-| `azure_appservice_logs` | Recent container/app logs and deployment logs | Kudu `/api/logs/docker`, `/api/deployments` |
-| `azure_containerapp_overview` | Revisions, replicas, restarts, ingress, scale rules, plus console/system logs from the linked workspace | ARM + LA |
-| `azure_aks_overview` | Cluster version, node pools, power and provisioning state, upgrade profile, diagnostics | ARM |
-| `azure_aks_workloads` | Pods (status, restarts, reasons), Warning events, deployments, nodes, with namespace filter | Kubernetes API (Entra token), `get`/`list` only |
-| `azure_aks_pod_logs` | Tail logs of a pod or container, including `--previous` for crash loops | Kubernetes API `pods/log` |
+
+| Tool                           | Purpose                                                                                                               | API                                             |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `azure_appservice_overview`    | State, plan, runtime, slots, health-check status, recent deployments, app settings (masked). Covers **Functions** too | ARM + Kudu                                      |
+| `azure_appservice_diagnostics` | The "Diagnose and solve problems" detectors (availability, HTTP 5xx, crashes, restarts)                               | ARM `sites/detectors`                           |
+| `azure_appservice_logs`        | Recent container/app logs and deployment logs                                                                         | Kudu `/api/logs/docker`, `/api/deployments`     |
+| `azure_containerapp_overview`  | Revisions, replicas, restarts, ingress, scale rules, plus console/system logs from the linked workspace               | ARM + LA                                        |
+| `azure_aks_overview`           | Cluster version, node pools, power and provisioning state, upgrade profile, diagnostics                               | ARM                                             |
+| `azure_aks_workloads`          | Pods (status, restarts, reasons), Warning events, deployments, nodes, with namespace filter                           | Kubernetes API (Entra token), `get`/`list` only |
+| `azure_aks_pod_logs`           | Tail logs of a pod or container, including `--previous` for crash loops                                               | Kubernetes API `pods/log`                       |
 
 For AKS in-cluster reads, the first choice is clusters with Entra ID integration, using your own token and your Kubernetes RBAC. Local-account clusters need `listClusterUserCredential`, which is off by default. For private clusters, or clusters we can't reach, the tool falls back to Container Insights tables (`KubePodInventory`, `KubeEvents`, `ContainerLogV2`) in Log Analytics.
 
 ### 4.5 Later (v1.x): same patterns, easy to add
+
 - Container Instances (logs, events)
 - Service Bus / Event Hubs (queue depth, dead-letter counts via ARM/metrics)
 - Azure SQL / PostgreSQL (query-performance insights, server logs)
@@ -145,16 +154,18 @@ betterazuremcp (single bundled ESM file, Node >= 22)
 - **Quality:** ESLint, Prettier, vitest. GitHub Actions on Windows, macOS, and Linux across Node 22, 24, and 26.
 
 ### Distribution (ease of use)
-| Channel | Command | Notes |
-|---|---|---|
-| npm (primary) | `npm i -g betterazuremcp` → command `betterazuremcp` | Stable: no `npx @latest` resolution on every launch |
-| npx (pinned) | `npx -y betterazuremcp@1.2.3` | Supported, always pinned in our docs |
-| VS Code | one-click `vscode:mcp/install?…` badge | Writes the `mcp.json` entry for you |
-| GitHub Copilot Desktop | Settings → MCP Servers → Add custom server → stdio, command `betterazuremcp` | Screenshot guide in README |
-| Copilot CLI | `/mcp add`, or `~/.copilot/mcp-config.json` | Snippet in README |
-| Standalone binary (later) | Node SEA executables on GitHub Releases, winget/Homebrew | For machines without Node. SEA is still experimental in Node, so this comes after v1 |
+
+| Channel                   | Command                                                                      | Notes                                                                                |
+| ------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| npm (primary)             | `npm i -g betterazuremcp` → command `betterazuremcp`                         | Stable: no `npx @latest` resolution on every launch                                  |
+| npx (pinned)              | `npx -y betterazuremcp@1.2.3`                                                | Supported, always pinned in our docs                                                 |
+| VS Code                   | one-click `vscode:mcp/install?…` badge                                       | Writes the `mcp.json` entry for you                                                  |
+| GitHub Copilot Desktop    | Settings → MCP Servers → Add custom server → stdio, command `betterazuremcp` | Screenshot guide in README                                                           |
+| Copilot CLI               | `/mcp add`, or `~/.copilot/mcp-config.json`                                  | Snippet in README                                                                    |
+| Standalone binary (later) | Node SEA executables on GitHub Releases, winget/Homebrew                     | For machines without Node. SEA is still experimental in Node, so this comes after v1 |
 
 Client config, identical everywhere:
+
 ```json
 { "servers": { "azure": { "type": "stdio", "command": "betterazuremcp" } } }
 ```
