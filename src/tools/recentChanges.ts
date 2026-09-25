@@ -37,6 +37,7 @@ export const recentChangesTool = defineTool({
     });
 
     return {
+      untrusted: true,
       summary:
         result.count === 0
           ? `No changes recorded for ${scope.name} in the last ${input.hours} hours.`

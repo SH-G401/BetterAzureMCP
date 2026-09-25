@@ -281,6 +281,7 @@ export const containerAppLogsTool = defineTool({
       Object.fromEntries(Object.entries(r).filter(([, v]) => v !== '' && v !== null)),
     );
     return {
+      untrusted: true,
       summary:
         rows.length === 0
           ? `No ${input.source} logs for ${app.name} in the last ${input.hours} hour(s)${input.search || input.revision ? ' matching the filters' : ''}. Logs can take a few minutes to arrive.`

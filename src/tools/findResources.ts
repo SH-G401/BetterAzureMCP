@@ -60,6 +60,7 @@ export const findResourcesTool = defineTool({
 
     const more = result.totalRecords > result.count ? ` of ${result.totalRecords}` : '';
     return {
+      untrusted: true,
       summary:
         result.count === 0
           ? 'No matching resources found. Try a shorter name fragment, or check the subscription with azure_context.'

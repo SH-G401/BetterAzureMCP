@@ -43,7 +43,21 @@ Everything else, including `PUT`, `PATCH`, `DELETE`, `POST` actions such as `lis
 
 **About `listClusterUserCredential`.** To reach an AKS API server, the server needs its address and CA certificate, which Azure only returns through this `POST`. It is called only for clusters with Entra ID integration, where the returned kubeconfig contains no credentials: requests to the cluster use your own Entra ID token and your Kubernetes permissions. For clusters without Entra ID the call is never made. The admin credential API is never called.
 
+**Subscription scope.** With `BETTERAZUREMCP_SUBSCRIPTIONS` set, a further pipeline policy refuses every request that names another subscription, and requires Resource Graph queries to be limited to the configured subscriptions. Management group queries are refused.
+
 Your Azure role assignments still apply: the server can never see more than the account you signed in with. Assigning that account only the **Reader** role is a good additional safeguard. See the [permissions table](README.md#permissions) for the tools that need more.
+
+## Prompt injection
+
+Tool results carry text that anyone may have written: log lines, exception messages, Kubernetes events, resource tags, commit messages. An attacker who can write such text can try to steer the assistant, as in the published attack on the official Azure MCP Server, where planted instructions made an agent read Key Vault secrets and leak them. BetterAzureMCP limits what such an attack can achieve:
+
+- **Nothing to steal.** No tool returns secret values: Key Vault secrets, keys, connection strings and app settings are never requested, and `listKeys`-style calls are blocked in the HTTP pipeline. Secret-looking values that appear anyway are masked.
+- **Nothing to change.** Every write is blocked in the HTTP pipeline, whatever the model asks for.
+- **No way out.** The server can only reach the hosts on the allowlist. The two hosts that vary per resource (App Service Kudu sites and AKS API servers) are never taken from model input: they are read from the resource's definition in Azure Resource Manager, which only succeeds for resources the signed-in account can already read. A tool call cannot make the server contact an attacker's host.
+- **Marked as data.** Results that contain free text are prefixed with a note that the content is untrusted, and the server instructions tell the model never to follow instructions found in results.
+- **Flagged when suspicious.** Every result is scanned for text addressed to an AI assistant ("ignore previous instructions", fake chat markup, requests to call tools or send credentials somewhere). Matches add a warning that names where the text was found ([`src/format/injection.ts`](src/format/injection.ts)).
+
+What remains is the model's own judgement within one conversation. Injected text can still try to mislead the analysis, for example by claiming a healthy service is failing. The markers above help the model and the user recognize it.
 
 ## What the language model sees
 

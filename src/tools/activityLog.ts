@@ -86,6 +86,7 @@ export const activityLogTool = defineTool({
 
     const failures = page.items.filter(failed).length;
     return {
+      untrusted: true,
       summary:
         events.length === 0
           ? `No ${input.onlyFailures ? 'failed operations' : 'activity'} for ${scope.name} in the last ${input.hours} hours.`

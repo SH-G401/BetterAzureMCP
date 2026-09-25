@@ -9,8 +9,21 @@ describe('loadConfig', () => {
       timeoutMs: 60_000,
       maxResponseBytes: 12 * 1024,
       showSecrets: false,
+      subscriptions: undefined,
+      maxMemoryBytes: 1024 * 1024 * 1024,
       logLevel: 'info',
     });
+  });
+
+  it('parses and normalizes BETTERAZUREMCP_SUBSCRIPTIONS', () => {
+    const config = loadConfig({
+      BETTERAZUREMCP_SUBSCRIPTIONS:
+        ' 00000000-0000-0000-0000-00000000000A, 00000000-0000-0000-0000-00000000000b;00000000-0000-0000-0000-00000000000a',
+    });
+    expect(config.subscriptions).toEqual([
+      '00000000-0000-0000-0000-00000000000a',
+      '00000000-0000-0000-0000-00000000000b',
+    ]);
   });
 
   it('reads BETTERAZUREMCP_* variables', () => {
@@ -41,6 +54,9 @@ describe('loadConfig', () => {
     ['BETTERAZUREMCP_TIMEOUT_SECONDS', '0'],
     ['BETTERAZUREMCP_TIMEOUT_SECONDS', 'ten'],
     ['BETTERAZUREMCP_SHOW_SECRETS', 'maybe'],
+    ['BETTERAZUREMCP_SUBSCRIPTIONS', 'prod-subscription'],
+    ['BETTERAZUREMCP_SUBSCRIPTIONS', ' , '],
+    ['BETTERAZUREMCP_MAX_MEMORY_MB', '64'],
   ])('rejects %s=%s', (key, value) => {
     expect(() => loadConfig({ [key]: value })).toThrow(ConfigError);
   });

@@ -52,10 +52,23 @@ export async function runDoctor(
       name: 'Subscriptions',
       needsAzure: true,
       run: async () => {
-        const page = await services.arm.list<{ state: string }>(
+        const page = await services.arm.list<{ subscriptionId: string; state: string }>(
           { path: '/subscriptions', apiVersion: '2022-12-01', signal },
           500,
         );
+        const scope = services.config.subscriptions;
+        if (scope !== undefined) {
+          const visible = page.items.filter((s) => scope.includes(s.subscriptionId.toLowerCase()));
+          const missing = scope.filter(
+            (id) => !visible.some((s) => s.subscriptionId.toLowerCase() === id),
+          );
+          if (missing.length > 0) {
+            throw new Error(
+              `BETTERAZUREMCP_SUBSCRIPTIONS lists subscriptions your account cannot see: ${missing.join(', ')}. Check the IDs and the tenant.`,
+            );
+          }
+          return `${visible.length} configured in BETTERAZUREMCP_SUBSCRIPTIONS, all accessible`;
+        }
         if (page.items.length === 0) {
           throw new Error(
             'Signed in, but no subscriptions are visible. Check the tenant (BETTERAZUREMCP_TENANT_ID) or ask for Reader access.',
@@ -105,6 +118,7 @@ export async function runDoctor(
   write(`  timeout          ${config.timeoutMs / 1000} s\n`);
   write(`  max response     ${config.maxResponseBytes / 1024} KB\n`);
   write(`  secrets          ${config.showSecrets ? 'shown' : 'masked'}\n`);
+  write(`  subscriptions    ${config.subscriptions?.join(', ') ?? '(all accessible)'}\n`);
   write(`  allowed hosts    ${ALLOWED_ENDPOINTS.map((e) => e.hosts).join(', ')}\n`);
   write(`\n${failures === 0 ? 'All checks passed.' : `${failures} check(s) failed.`}\n`);
   return failures === 0 ? 0 : 1;

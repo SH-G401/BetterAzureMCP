@@ -41,6 +41,7 @@ export const resourceGraphQueryTool = defineTool({
 
     const paging = result.skipToken ? ' More rows are available: pass skipToken to continue.' : '';
     return {
+      untrusted: true,
       summary: `Returned ${plural(result.count, 'row')} (total ${result.totalRecords}).${paging}`,
       data: {
         totalRecords: result.totalRecords,

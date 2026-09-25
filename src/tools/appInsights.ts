@@ -80,6 +80,7 @@ export const appInsightsFailuresTool = defineTool({
     ];
 
     return {
+      untrusted: true,
       summary: parts.filter(Boolean).join(' '),
       data: {
         appInsights: component.id,
@@ -126,6 +127,7 @@ export const appInsightsTraceTool = defineTool({
     const rows = (await runQuery(ctx, workspace, query, input.hours)).map(dropEmpty);
     const failures = rows.filter((r) => r.Success === false || r.itemType === 'Exceptions').length;
     return {
+      untrusted: true,
       summary:
         rows.length === 0
           ? `No telemetry found for operation ${input.operationId} in the last ${input.hours} hours. Sampling may have dropped it; try another sampleOperationId.`

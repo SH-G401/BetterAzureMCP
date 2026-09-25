@@ -154,6 +154,8 @@ Configuration is optional and done through environment variables. Most clients l
 | `BETTERAZUREMCP_CREDENTIAL`      | `auto`               | `auto` tries environment variables, Azure CLI, Azure Developer CLI and Azure PowerShell, in that order. Or pin one: `azurecli`, `azd`, `azurepowershell`, `environment`, `managedidentity`. |
 | `BETTERAZUREMCP_TIMEOUT_SECONDS` | `60`                 | Deadline for a single tool call (5–600).                                                                                                                                                    |
 | `BETTERAZUREMCP_MAX_RESPONSE_KB` | `12`                 | Size limit for a single tool result (2–256).                                                                                                                                                |
+| `BETTERAZUREMCP_SUBSCRIPTIONS`   | all accessible       | Comma-separated subscription IDs. The server then reads only from these subscriptions, enforced for every request.                                                                          |
+| `BETTERAZUREMCP_MAX_MEMORY_MB`   | `1024`               | The server stops itself if it ever uses more memory than this. The client restarts it on the next call.                                                                                     |
 | `BETTERAZUREMCP_SHOW_SECRETS`    | `false`              | Set to `true` to stop masking secret values. Not recommended.                                                                                                                               |
 | `BETTERAZUREMCP_LOG_LEVEL`       | `info`               | `error`, `warn`, `info` or `debug`. Logs go to stderr, which clients show in their output panel.                                                                                            |
 
@@ -164,6 +166,7 @@ Behind a corporate proxy, set `HTTPS_PROXY` (and `NO_PROXY` if needed).
 - **Where data goes.** Requests go only to Azure Resource Manager (`management.azure.com`), the Log Analytics query API (`api.loganalytics.io`), your App Service apps' Kudu sites (`*.scm.azurewebsites.net`) and your AKS API servers (`*.azmk8s.io`). Any other host is refused before a request is made.
 - **What is sent.** Only the Azure API calls needed to answer a tool call. There is no telemetry, crash reporting or update check.
 - **What cannot happen.** `PUT`, `PATCH` and `DELETE` are blocked, and so is every `POST` that is not a known read. Kudu access is limited to log files, and Kubernetes access to pod, event, deployment and node status and pod logs. Secrets, config maps, `exec` and calls such as `listKeys` are never reachable.
+- **Prompt injection.** Logs, messages and tags can contain text written by anyone. Results that carry such text are marked as untrusted, and text that reads like instructions to an AI assistant is flagged with a warning. The server has nothing to steal and no way to send data out: it never reads secret values, cannot write, and can only reach Azure endpoints of resources you can already read.
 - **What the AI sees.** Your MCP client passes tool results to its language model. Values that look like secrets (passwords, keys, connection strings, SAS tokens) are masked first, and app setting values are never read.
 
 The full model is in [SECURITY.md](SECURITY.md).
@@ -194,7 +197,7 @@ npm link    # puts the `betterazuremcp` command on your PATH
 
 ## Contributing
 
-Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup and ground rules, and [docs/architecture.md](docs/architecture.md) for how the code fits together. The reasoning behind the design is in [docs/RESEARCH.md](docs/RESEARCH.md) and [docs/PLAN.md](docs/PLAN.md).
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup and ground rules, and [docs/architecture.md](docs/architecture.md) for how the code fits together. The reasoning behind the design is in [docs/RESEARCH.md](docs/RESEARCH.md) and [docs/PLAN.md](docs/PLAN.md), and [docs/COMPLAINTS.md](docs/COMPLAINTS.md) tracks user complaints about the official Azure MCP Server and what we do about each.
 
 ## License
 

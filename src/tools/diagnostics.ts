@@ -88,6 +88,7 @@ export const diagnosticsTool = defineTool({
           }),
         );
       return {
+        untrusted: true,
         summary: `${detectors.length} detectors available for ${resource.name}. Pick one by id and call again.`,
         data: { detectors },
         listKey: 'detectors',
@@ -123,6 +124,7 @@ export const diagnosticsTool = defineTool({
       .filter((d) => d.rows?.length || d.title);
 
     return {
+      untrusted: true,
       summary: `Detector "${props.metadata?.name ?? input.detector}" on ${resource.name}: ${status}${props.status?.message ? ` - ${props.status.message}` : ''}.`,
       data: { detector: input.detector, status, datasets },
       listKey: 'datasets',
