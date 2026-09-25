@@ -4,6 +4,22 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-25
+
+First stable release. Tool names and parameters are now covered by semantic versioning.
+
+### Added
+
+- Telemetry tools: `azure_resource_health`, `azure_recent_changes`, `azure_activity_log`, `azure_telemetry_locations`, `azure_metrics`, `azure_logs_query`, `azure_appinsights_failures`, `azure_appinsights_trace`.
+- Platform tools: `azure_appservice_overview`, `azure_appservice_logs`, `azure_diagnostics`, `azure_containerapp_overview`, `azure_containerapp_logs`, `azure_aks_overview`, `azure_aks_workloads`, `azure_aks_pod_logs`.
+- Egress allowlist entries for the Log Analytics query API, App Service Kudu sites and AKS API servers, each with its own read-only path rules.
+- Role-specific guidance when Kudu or AKS access is denied.
+- Release workflow that publishes to npm with provenance.
+
+### Changed
+
+- Secret masking now also covers structured values under secret-named properties, such as before/after values in change records.
+
 ## [0.1.0] - 2026-09-25
 
 ### Added
@@ -15,5 +31,6 @@ All notable changes to this project are documented here. The format follows [Kee
 - Per-call deadlines, secret masking and size-capped results.
 - `betterazuremcp doctor` to check sign-in, subscriptions and connectivity.
 
-[Unreleased]: https://github.com/SH-G401/BetterAzureMCP/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/SH-G401/BetterAzureMCP/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/SH-G401/BetterAzureMCP/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/SH-G401/BetterAzureMCP/releases/tag/v0.1.0

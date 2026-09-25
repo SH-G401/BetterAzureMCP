@@ -61,6 +61,14 @@ See [docs/architecture.md](docs/architecture.md) for how a tool call flows throu
 3. Add unit tests with `servicesWith(...)` from `test/helpers.ts`, covering the requests it makes and the summary it returns.
 4. Update the tool table in `README.md` and the entry in `CHANGELOG.md`.
 
+## Releasing
+
+1. Update `version` in `package.json` (and run `npm install --package-lock-only`), and move the `Unreleased` entries in `CHANGELOG.md` under the new version.
+2. Merge to `main`.
+3. Tag the merge commit and push the tag: `git tag v1.2.3 && git push origin v1.2.3`.
+
+The [release workflow](.github/workflows/release.yml) checks that the tag matches `package.json`, runs the full check, publishes to npm with provenance and creates a GitHub release with the bundle attached. It needs an `NPM_TOKEN` repository secret with publish rights.
+
 ## Pull requests
 
 - Keep changes focused. One feature or fix per pull request.
