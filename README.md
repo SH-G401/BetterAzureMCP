@@ -194,7 +194,7 @@ npm link    # puts the `betterazuremcp` command on your PATH
 
 ## Contributing
 
-Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup and ground rules, and [docs/architecture.md](docs/architecture.md) for how the code fits together. The reasoning behind the design is in [docs/RESEARCH.md](docs/RESEARCH.md) and [docs/PLAN.md](docs/PLAN.md).
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup and ground rules, and [docs/architecture.md](docs/architecture.md) for how the code fits together. The reasoning behind the design is in [docs/RESEARCH.md](docs/RESEARCH.md) and [docs/PLAN.md](docs/PLAN.md), and [docs/COMPLAINTS.md](docs/COMPLAINTS.md) tracks user complaints about the official Azure MCP Server and what we do about each.
 
 ## License
 
