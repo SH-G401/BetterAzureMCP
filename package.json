@@ -47,7 +47,7 @@
     "live-check": "node scripts/build.mjs && node scripts/live-check.mjs"
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "0.128.0",
+    "@anthropic-ai/sdk": "0.133.0",
     "@azure/core-auth": "1.11.0",
     "@azure/core-rest-pipeline": "1.25.0",
     "@azure/identity": "4.13.3",
